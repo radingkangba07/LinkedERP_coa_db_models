@@ -147,7 +147,7 @@ class CoaEmbeddingStore(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
     )
     file_type: Mapped[str] = mapped_column(String(50), nullable=False)
     source_account_type: Mapped[str | None] = mapped_column(String(200), nullable=True)
