@@ -2,7 +2,15 @@
 
 Shared SQLAlchemy models and Alembic migrations for the COA Migration platform.
 
-## Install
+## First-time setup after cloning
+
+```bash
+cp .env.example .env
+# Edit .env with your DATABASE_URL
+uv sync
+```
+
+## Install as a dependency (for consuming repos)
 
 ```bash
 pip install "coa-db-models @ git+https://github.com/<org>/coa-db-models.git@develop"
@@ -30,13 +38,6 @@ All models and the `Base` declarative base are re-exported from the top-level pa
 
 This package owns all Alembic migrations. Consuming repos do **not** maintain their own migrations.
 
-### Setup
-
-```bash
-cp .env.example .env
-# Edit .env with your DATABASE_URL
-```
-
 ### Run migrations
 
 ```bash
@@ -59,3 +60,18 @@ uv run python seed.py
 ```
 
 Requires `DATABASE_URL` in `.env` or environment. Skips if data already exists.
+
+## Updating consuming repos (backend, ML, etc.)
+
+After changes are merged to `develop`, consuming repos pick up the latest by running:
+
+```bash
+uv lock --upgrade-package coa-db-models
+uv sync
+```
+
+## Workflow for model/migration changes
+
+1. Make changes in this repo, commit, and push to `develop`
+2. Consuming repos run `uv lock --upgrade-package coa-db-models` to pick up changes
+3. Migrations are run from **this repo**, not the consuming repos
