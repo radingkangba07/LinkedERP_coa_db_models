@@ -19,9 +19,9 @@ load_dotenv()
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from coa_db_models.auth.models import User
+from coa_db_models.auth.models import Organization, User
 from coa_db_models.mappings.models import CoaMapping
-from coa_db_models.projects.models import Company, Project, ProjectAccess
+from coa_db_models.projects.models import Project, ProjectAccess
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,16 +41,16 @@ async def seed(session: AsyncSession) -> None:
     session.add_all([admin, john, jane])
     await session.flush()
 
-    # Companies
-    acme = Company(slug="acme-corp", name="ACME Corporation")
-    globex = Company(slug="globex-inc", name="Globex Inc")
+    # Organizations
+    acme = Organization(slug="acme-corp", name="ACME Corporation")
+    globex = Organization(slug="globex-inc", name="Globex Inc")
     session.add_all([acme, globex])
     await session.flush()
 
     # Projects
     p1 = Project(
         name="QuickBooks to Xero Migration",
-        company_id=acme.id,
+        org_id=acme.id,
         source_system="quickbooks",
         target_system="xero",
         status="in_progress",
@@ -59,7 +59,7 @@ async def seed(session: AsyncSession) -> None:
     )
     p2 = Project(
         name="SAP to NetSuite Migration",
-        company_id=acme.id,
+        org_id=acme.id,
         source_system="sap",
         target_system="oracle_netsuite",
         status="completed",
@@ -68,7 +68,7 @@ async def seed(session: AsyncSession) -> None:
     )
     p3 = Project(
         name="Sage to Dynamics Migration",
-        company_id=globex.id,
+        org_id=globex.id,
         source_system="sage",
         target_system="microsoft_dynamics",
         status="draft",
