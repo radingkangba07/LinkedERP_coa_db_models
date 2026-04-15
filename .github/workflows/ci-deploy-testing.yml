@@ -95,6 +95,13 @@ jobs:
             git fetch origin
             git reset --hard "origin/${DB_REF}"
 
+            # Ensure uv is available
+            if ! command -v uv &> /dev/null; then
+              echo "Installing uv..."
+              curl -LsSf https://astral.sh/uv/install.sh | sh
+              export PATH="$HOME/.local/bin:$PATH"
+            fi
+
             # Install/update dependencies and run migrations
             uv sync --dev
             uv run alembic upgrade head
