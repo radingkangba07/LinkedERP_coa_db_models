@@ -76,11 +76,12 @@ jobs:
         env:
           DB_REF: ${{ github.event.pull_request.head.ref || 'develop' }}
           GH_PAT: ${{ secrets.GH_PAT_COA_DB_MODELS }}
+          DATABASE_URL: ${{ secrets.TESTING_DATABASE_URL }}
         with:
           host: ${{ secrets.TESTING_SSH_HOST }}
           username: ${{ secrets.TESTING_SSH_USER }}
           key: ${{ secrets.TESTING_SSH_KEY }}
-          envs: DB_REF,GH_PAT
+          envs: DB_REF,GH_PAT,DATABASE_URL
           command_timeout: 10m
           script: |
             set -euo pipefail
@@ -103,6 +104,7 @@ jobs:
             fi
 
             # Install/update dependencies and run migrations
+            export DATABASE_URL="${DATABASE_URL}"
             uv sync --dev
             uv run alembic upgrade head
             echo "Migrations applied successfully."
