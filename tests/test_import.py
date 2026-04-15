@@ -4,8 +4,7 @@ from coa_db_models import (
     Organization,
     OrganizationMember,
     RefreshToken,
-    Invitation,
-    Company,
+    OrganizationInvitation,
     Project,
     ProjectAccess,
     Job,
@@ -25,8 +24,7 @@ def test_all_tables_registered():
         "organizations",
         "organization_members",
         "refresh_tokens",
-        "invitations",
-        "companies",
+        "organization_invitations",
         "projects",
         "project_access",
         "jobs",
@@ -46,8 +44,7 @@ def test_reexported_symbols():
     assert Organization.__tablename__ == "organizations"
     assert OrganizationMember.__tablename__ == "organization_members"
     assert RefreshToken.__tablename__ == "refresh_tokens"
-    assert Invitation.__tablename__ == "invitations"
-    assert Company.__tablename__ == "companies"
+    assert OrganizationInvitation.__tablename__ == "organization_invitations"
     assert Project.__tablename__ == "projects"
     assert ProjectAccess.__tablename__ == "project_access"
     assert Job.__tablename__ == "jobs"
