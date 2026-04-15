@@ -76,12 +76,11 @@ jobs:
         env:
           DB_REF: ${{ github.event.pull_request.head.ref || 'develop' }}
           GH_PAT: ${{ secrets.GH_PAT_COA_DB_MODELS }}
-          DATABASE_URL: ${{ secrets.TESTING_DATABASE_URL }}
         with:
           host: ${{ secrets.TESTING_SSH_HOST }}
           username: ${{ secrets.TESTING_SSH_USER }}
           key: ${{ secrets.TESTING_SSH_KEY }}
-          envs: DB_REF,GH_PAT,DATABASE_URL
+          envs: DB_REF,GH_PAT
           command_timeout: 10m
           script: |
             set -euo pipefail
@@ -103,8 +102,16 @@ jobs:
               export PATH="$HOME/.local/bin:$PATH"
             fi
 
+            # Source DATABASE_URL from the backend's env file
+            ENV_FILE=/opt/coa-migration/environments/testing/.env.testing
+            if [ -f "${ENV_FILE}" ]; then
+              export $(grep -E '^DATABASE_URL=' "${ENV_FILE}" | xargs)
+            else
+              echo "ERROR: ${ENV_FILE} not found"
+              exit 1
+            fi
+
             # Install/update dependencies and run migrations
-            export DATABASE_URL="${DATABASE_URL}"
             uv sync --dev
             uv run alembic upgrade head
             echo "Migrations applied successfully."
