@@ -54,7 +54,12 @@ def upgrade() -> None:
         """
     )
 
-    # 3. Remap projects.company_id to point to corresponding organizations.id
+    # 3. Drop old FK constraints before remapping data (otherwise the FK
+    #    validation rejects the new organization IDs against the companies table)
+    op.drop_constraint("projects_company_id_fkey", "projects", type_="foreignkey")
+    op.drop_constraint("fk_project_files_company_id", "project_files", type_="foreignkey")
+
+    # 4. Remap projects.company_id to point to corresponding organizations.id
     op.execute(
         """
         UPDATE projects p
@@ -65,7 +70,7 @@ def upgrade() -> None:
         """
     )
 
-    # 4. Remap project_files.company_id similarly
+    # 5. Remap project_files.company_id similarly
     op.execute(
         """
         UPDATE project_files pf
@@ -76,20 +81,15 @@ def upgrade() -> None:
         """
     )
 
-    # 5. Drop old FK constraints and indexes on company_id
-    # projects.company_id FK (unnamed from initial migration — Alembic convention name)
-    op.drop_constraint("projects_company_id_fkey", "projects", type_="foreignkey")
+    # 6. Drop old indexes on company_id
     op.drop_index(op.f("ix_projects_company_id"), table_name="projects")
-
-    # project_files.company_id FK (explicitly named)
-    op.drop_constraint("fk_project_files_company_id", "project_files", type_="foreignkey")
     op.drop_index(op.f("ix_project_files_company_id"), table_name="project_files")
 
-    # 6. Rename columns
+    # 7. Rename columns
     op.alter_column("projects", "company_id", new_column_name="org_id")
     op.alter_column("project_files", "company_id", new_column_name="org_id")
 
-    # 7. Create new FK constraints and indexes on org_id
+    # 8. Create new FK constraints and indexes on org_id
     op.create_foreign_key(
         "fk_projects_org_id",
         "projects",
@@ -110,11 +110,11 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_project_files_org_id"), "project_files", ["org_id"], unique=False)
 
-    # 8. Make organizations.slug not-null and add unique index
+    # 9. Make organizations.slug not-null and add unique index
     op.alter_column("organizations", "slug", nullable=False)
     op.create_index(op.f("ix_organizations_slug"), "organizations", ["slug"], unique=True)
 
-    # 9. Drop companies table
+    # 10. Drop companies table
     op.drop_index(op.f("ix_companies_slug"), table_name="companies")
     op.drop_table("companies")
 
