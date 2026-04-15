@@ -6,30 +6,16 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
+from coa_db_models.auth.models import User  # noqa: F401 — needed for FK resolution
 from coa_db_models.base import Base
-
-
-class Company(Base):
-    __tablename__ = "companies"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
-    )
-
-    projects: Mapped[list["Project"]] = relationship(back_populates="company", cascade="all, delete-orphan")
 
 
 class Project(Base):
     __tablename__ = "projects"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    company_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True
+    org_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -48,7 +34,7 @@ class Project(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    company: Mapped["Company"] = relationship(back_populates="projects")
+    organization: Mapped["Organization"] = relationship(back_populates="projects")
     access_list: Mapped[list["ProjectAccess"]] = relationship(back_populates="project", cascade="all, delete-orphan")
 
     __table_args__ = (Index("ix_projects_status", "status"),)
@@ -80,4 +66,4 @@ class ProjectAccess(Base):
     )
 
 
-from coa_db_models.auth.models import User  # noqa: E402
+from coa_db_models.auth.models import Organization  # noqa: E402, F811 — needed for relationship resolution
