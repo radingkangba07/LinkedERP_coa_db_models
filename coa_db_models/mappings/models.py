@@ -31,6 +31,7 @@ class CoaMapping(Base):
     confidence_score: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, server_default=text("0"))
     unique_identifier: Mapped[str | None] = mapped_column(String(255), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
