@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -32,15 +32,43 @@ class Organization(Base):
     __tablename__ = "organizations"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    slug: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    org_type: Mapped[str] = mapped_column(String(20), nullable=False, server_default="employer")
+    parent_org_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="RESTRICT"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
     projects: Mapped[list["Project"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
+    parent: Mapped["Organization | None"] = relationship(
+        "Organization",
+        back_populates="children",
+        remote_side="Organization.id",
+        foreign_keys="[Organization.parent_org_id]",
+    )
+    children: Mapped[list["Organization"]] = relationship(
+        "Organization",
+        back_populates="parent",
+        foreign_keys="[Organization.parent_org_id]",
+    )
+
+    __table_args__ = (
+        CheckConstraint("org_type IN ('employer', 'client')", name="chk_organizations_org_type"),
+        CheckConstraint(
+            "(org_type = 'employer' AND parent_org_id IS NULL) OR (org_type = 'client' AND parent_org_id IS NOT NULL)",
+            name="chk_org_parent_consistency",
+        ),
+        Index("ix_organizations_parent_org_id", "parent_org_id"),
+        Index("uq_org_name_employer", "name", unique=True, postgresql_where=text("org_type = 'employer'")),
+        Index("uq_org_name_client", "name", "parent_org_id", unique=True, postgresql_where=text("org_type = 'client'")),
+        Index("uq_org_slug_employer", "slug", unique=True, postgresql_where=text("org_type = 'employer'")),
+        Index("uq_org_slug_client", "slug", "parent_org_id", unique=True, postgresql_where=text("org_type = 'client'")),
+    )
 
 
 class OrganizationMember(Base):
