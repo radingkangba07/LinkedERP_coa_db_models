@@ -1,8 +1,8 @@
-name: CI & Deploy Migrations to Testing
+name: CI & Deploy Migrations to Staging
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [staging]
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
@@ -13,7 +13,7 @@ env:
   DATABASE_URL: "postgresql+asyncpg://coa_user:coa_pass@localhost:5432/coa_migration_test"
 
 concurrency:
-  group: deploy-testing-db
+  group: deploy-staging-db
   cancel-in-progress: true
 
 jobs:
@@ -62,19 +62,19 @@ jobs:
       - name: Re-upgrade to head (sanity check)
         run: uv run alembic upgrade head
 
-  # ── Step 2: Deploy migrations to the testing database ──────────────
+  # ── Step 2: Deploy migrations to the staging database ──────────────
   deploy-migrations:
-    name: Deploy migrations to testing
+    name: Deploy migrations to staging
     needs: test-migrations
     runs-on: ubuntu-latest
     environment:
-      name: testing
+      name: staging
 
     steps:
-      - name: Run migrations on testing DB via SSH
+      - name: Run migrations on staging DB via SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
-          DB_REF: ${{ github.event.pull_request.head.ref || 'develop' }}
+          DB_REF: ${{ github.event.pull_request.head.ref || 'staging' }}
           GH_PAT: ${{ secrets.GH_PAT_COA_ML_SERVICE }}
         with:
           host: ${{ secrets.TESTING_SSH_HOST }}
@@ -86,25 +86,22 @@ jobs:
             set -euo pipefail
             echo "Deploying db migrations from ref: ${DB_REF}"
 
-            ENV_DIR=/opt/coa-migration/environments/testing
+            ENV_DIR=/opt/coa-migration/environments/staging
             DB_MODELS_DIR="${ENV_DIR}/coa-db-models"
 
             if [ ! -d "${DB_MODELS_DIR}/.git" ]; then
-              git clone "https://${GH_PAT}@github.com/bhavna-linkedrp/coa-db-models..git" "${DB_MODELS_DIR}"
+              git clone "https://${GH_PAT}@github.com/bhavna-linkedrp/coa-db-models.git" "${DB_MODELS_DIR}"
             fi
 
             cd "${DB_MODELS_DIR}"
             git fetch origin
             git reset --hard "origin/${DB_REF}"
 
-            # Run alembic inside the Docker network so it can reach the
-            # postgres service. Mount the coa-db-models checkout and
-            # use the same DATABASE_URL as the backend (from .env.testing).
             docker run --rm \
-              --network coa-testing_coa-testing \
+              --network coa-staging_coa-staging \
               -v "${DB_MODELS_DIR}:/app" \
               -w /app \
-              --env-file "${ENV_DIR}/.env.testing" \
+              --env-file "${ENV_DIR}/.env.staging" \
               ghcr.io/astral-sh/uv:python3.13-alpine \
               sh -c "uv sync --dev && uv run alembic upgrade head"
 
