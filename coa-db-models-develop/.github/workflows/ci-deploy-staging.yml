@@ -1,0 +1,108 @@
+name: CI & Deploy Migrations to Staging
+
+on:
+  pull_request:
+    branches: [staging]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.13"
+  UV_PYTHON: "3.13"
+  UV_CACHE_DIR: /tmp/.uv-cache
+  DATABASE_URL: "postgresql+asyncpg://coa_user:coa_pass@localhost:5432/coa_migration_test"
+
+concurrency:
+  group: deploy-staging-db
+  cancel-in-progress: true
+
+jobs:
+  # ── Step 1: Test migrations (upgrade + downgrade) against a fresh DB ──
+  test-migrations:
+    name: Test migrations (upgrade ↑ downgrade ↓)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: coa_user
+          POSTGRES_PASSWORD: coa_pass
+          POSTGRES_DB: coa_migration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U coa_user -d coa_migration_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-suffix: "migrations"
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Upgrade to head
+        run: uv run alembic upgrade head
+
+      - name: Downgrade to base
+        run: uv run alembic downgrade base
+
+      - name: Re-upgrade to head (sanity check)
+        run: uv run alembic upgrade head
+
+  # ── Step 2: Deploy migrations to the staging database ──────────────
+  deploy-migrations:
+    name: Deploy migrations to staging
+    needs: test-migrations
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+
+    steps:
+      - name: Run migrations on staging DB via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DB_REF: ${{ github.event.pull_request.head.ref || 'staging' }}
+          GH_PAT: ${{ secrets.GH_PAT_COA_DB_MODELS }}
+        with:
+          host: ${{ secrets.TESTING_SSH_HOST }}
+          username: ${{ secrets.TESTING_SSH_USER }}
+          key: ${{ secrets.TESTING_SSH_KEY }}
+          envs: DB_REF,GH_PAT
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+            echo "Deploying db migrations from ref: ${DB_REF}"
+
+            ENV_DIR=/opt/coa-migration/environments/staging
+            DB_MODELS_DIR="${ENV_DIR}/coa-db-models"
+
+            if [ ! -d "${DB_MODELS_DIR}/.git" ]; then
+              git clone "https://${GH_PAT}@github.com/bhavna-linkedrp/coa-db-models.git" "${DB_MODELS_DIR}"
+            fi
+
+            cd "${DB_MODELS_DIR}"
+            git fetch origin
+            git reset --hard "origin/${DB_REF}"
+
+            docker run --rm \
+              --network coa-staging_coa-staging \
+              -v "${DB_MODELS_DIR}:/app" \
+              -w /app \
+              --env-file "${ENV_DIR}/.env.staging" \
+              ghcr.io/astral-sh/uv:python3.13-alpine \
+              sh -c "uv sync --dev && uv run alembic upgrade head"
+
+            echo "Migrations applied successfully."
