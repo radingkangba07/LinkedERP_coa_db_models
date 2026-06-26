@@ -90,7 +90,7 @@ jobs:
             DB_MODELS_DIR="${ENV_DIR}/coa-db-models"
 
             if [ ! -d "${DB_MODELS_DIR}/.git" ]; then
-              git clone "https://${GH_PAT}@github.com/bhavna-linkedrp/coa-db-models..git" "${DB_MODELS_DIR}"
+              git clone "https://${GH_PAT}@github.com/radingkangba07/LinkedERP_coa_db_models.git" "${DB_MODELS_DIR}"
             fi
 
             cd "${DB_MODELS_DIR}"
