@@ -9,7 +9,7 @@ Create Date: 2026-07-06
 from collections.abc import Sequence
 
 revision: str = "fix_merge_phantom_revision"
-down_revision: str = "dab16_extend_project_org_file"
+down_revision: str = "dab12_workstream_category"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
