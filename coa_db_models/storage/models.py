@@ -22,6 +22,9 @@ class File(Base):
     job_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="SET NULL"), nullable=True
     )
+    workstream_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workstreams.id", ondelete="SET NULL"), nullable=True
+    )
     file_type: Mapped[str] = mapped_column(String(50), nullable=False, server_default="source_erp")
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
     storage_path: Mapped[str] = mapped_column(String(500), nullable=False, unique=True)
