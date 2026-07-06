@@ -15,6 +15,12 @@ from coa_db_models import (
     CoaEmbeddingStore,
     File,
 )
+from coa_db_models.workstreams.models import (
+    WorkstreamCategory,
+    Workstream,
+    WorkstreamStage,
+    WorkstreamStatusLog,
+)
 
 
 def test_all_tables_registered():
@@ -34,6 +40,10 @@ def test_all_tables_registered():
         "account_type_mappings",
         "coa_embedding_store",
         "project_files",
+        "workstream_categories",
+        "workstreams",
+        "workstream_stages",
+        "workstream_status_logs",
     }
     assert expected.issubset(table_names), f"Missing tables: {expected - table_names}"
 
@@ -54,3 +64,10 @@ def test_reexported_symbols():
     assert AccountTypeMapping.__tablename__ == "account_type_mappings"
     assert CoaEmbeddingStore.__tablename__ == "coa_embedding_store"
     assert File.__tablename__ == "project_files"
+
+
+def test_workstream_tables_registered():
+    assert WorkstreamCategory.__tablename__ == "workstream_categories"
+    assert Workstream.__tablename__ == "workstreams"
+    assert WorkstreamStage.__tablename__ == "workstream_stages"
+    assert WorkstreamStatusLog.__tablename__ == "workstream_status_logs"
