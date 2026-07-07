@@ -34,6 +34,7 @@ class Organization(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(100), nullable=False)
+    code: Mapped[str | None] = mapped_column(String(10), nullable=True, unique=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     org_type: Mapped[str] = mapped_column(String(20), nullable=False, server_default="employer")
     parent_org_id: Mapped[uuid.UUID | None] = mapped_column(

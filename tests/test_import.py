@@ -14,6 +14,10 @@ from coa_db_models import (
     AccountTypeMapping,
     CoaEmbeddingStore,
     File,
+    WorkstreamCategory,
+    Workstream,
+    WorkstreamStage,
+    WorkstreamStatusLog,
 )
 from coa_db_models.workstreams.models import (
     WorkstreamCategory,
@@ -71,3 +75,15 @@ def test_workstream_tables_registered():
     assert Workstream.__tablename__ == "workstreams"
     assert WorkstreamStage.__tablename__ == "workstream_stages"
     assert WorkstreamStatusLog.__tablename__ == "workstream_status_logs"
+
+
+def test_dab16_column_additions():
+    project_cols = {c.name for c in Project.__table__.columns}
+    for col in ("display_code", "display_code_org", "display_code_src", "display_code_tgt", "display_code_seq"):
+        assert col in project_cols, f"Project missing column: {col}"
+
+    org_cols = {c.name for c in Organization.__table__.columns}
+    assert "code" in org_cols, "Organization missing column: code"
+
+    file_cols = {c.name for c in File.__table__.columns}
+    assert "workstream_id" in file_cols, "File missing column: workstream_id"
