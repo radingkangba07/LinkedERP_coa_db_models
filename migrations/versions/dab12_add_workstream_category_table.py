@@ -18,7 +18,6 @@ down_revision: tuple[str, ...] = (
     "ca9e146bcd70",
     "f59248742306",
     "80363d0e89b7",
-    "e1f2a3b4c5d6",
 )
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
