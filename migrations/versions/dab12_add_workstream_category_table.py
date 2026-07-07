@@ -37,6 +37,7 @@ def upgrade() -> None:
     )
     op.create_index("ix_workstream_categories_slug", "workstream_categories", ["slug"], unique=True)
 
+    # Seed initial categories
     op.execute(
         sa.text(
             "INSERT INTO workstream_categories (name, slug, display_code_prefix, display_order) VALUES "
