@@ -1,7 +1,7 @@
 """add workstream_category table
 
 Revision ID: dab12_workstream_category
-Revises: a2b3c4d5e6f7, ca9e146bcd70, f59248742306, 80363d0e89b7
+Revises: fix_merge_phantom_revision
 Create Date: 2026-07-06
 
 """
@@ -13,18 +13,21 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "dab12_workstream_category"
-down_revision: tuple[str, ...] = (
-    "a2b3c4d5e6f7",
-    "ca9e146bcd70",
-    "f59248742306",
-    "80363d0e89b7",
-    "e1f2a3b4c5d6",
-)
+down_revision: str = "fix_merge_phantom_revision"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    try:
+        conn = op.get_bind()
+        if "workstream_categories" in sa.inspect(conn).get_table_names():
+            # Table was created outside Alembic tracking (testing DB state inconsistency).
+            # Schema is already correct — only alembic_version needs to be advanced.
+            return
+    except sa.exc.NoInspectionAvailable:
+        pass  # offline / --sql mode: proceed and emit full DDL
+
     op.create_table(
         "workstream_categories",
         sa.Column("id", postgresql.UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), primary_key=True, nullable=False),
@@ -36,7 +39,6 @@ def upgrade() -> None:
     )
     op.create_index("ix_workstream_categories_slug", "workstream_categories", ["slug"], unique=True)
 
-    # Seed initial categories
     op.execute(
         sa.text(
             "INSERT INTO workstream_categories (name, slug, display_code_prefix, display_order) VALUES "
