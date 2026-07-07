@@ -19,6 +19,12 @@ from coa_db_models import (
     WorkstreamStage,
     WorkstreamStatusLog,
 )
+from coa_db_models.workstreams.models import (
+    WorkstreamCategory,
+    Workstream,
+    WorkstreamStage,
+    WorkstreamStatusLog,
+)
 
 
 def test_all_tables_registered():
