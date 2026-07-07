@@ -1,7 +1,7 @@
 """add workstream_category table
 
 Revision ID: dab12_workstream_category
-Revises: a2b3c4d5e6f7
+Revises: e1f2a3b4c5d6
 Create Date: 2026-07-06
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "dab12_workstream_category"
-down_revision: str = "a2b3c4d5e6f7"
+down_revision: str = "e1f2a3b4c5d6"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
