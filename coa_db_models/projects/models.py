@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy.sql.expression import true as sa_true
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -67,3 +68,37 @@ class ProjectAccess(Base):
 
 
 from coa_db_models.auth.models import Organization  # noqa: E402, F811 — needed for relationship resolution
+
+
+class ProjectMasterDataSelection(Base):
+    __tablename__ = "project_master_data_selections"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    data_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    selected: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=sa_true())
+
+
+class ProjectOpeningBalanceSelection(Base):
+    __tablename__ = "project_opening_balance_selections"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    account_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    include: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=sa_true())
+
+
+class ProjectWizardFields(Base):
+    __tablename__ = "project_wizard_fields"
+
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    source_vendor_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    target_vendor_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    source_connection_method: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    target_connection_method: Mapped[str | None] = mapped_column(String(100), nullable=True)
