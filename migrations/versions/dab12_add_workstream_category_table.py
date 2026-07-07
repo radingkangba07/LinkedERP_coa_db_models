@@ -22,11 +22,9 @@ def upgrade() -> None:
     try:
         conn = op.get_bind()
         if "workstream_categories" in sa.inspect(conn).get_table_names():
-            # Table was created outside Alembic tracking (testing DB state inconsistency).
-            # Schema is already correct — only alembic_version needs to be advanced.
             return
     except sa.exc.NoInspectionAvailable:
-        pass  # offline / --sql mode: proceed and emit full DDL
+        pass
 
     op.create_table(
         "workstream_categories",
