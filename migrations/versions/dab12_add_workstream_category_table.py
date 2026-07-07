@@ -19,6 +19,15 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    try:
+        conn = op.get_bind()
+        if "workstream_categories" in sa.inspect(conn).get_table_names():
+            # Table was created outside Alembic tracking (testing DB state inconsistency).
+            # Schema is already correct — only alembic_version needs to be advanced.
+            return
+    except sa.exc.NoInspectionAvailable:
+        pass  # offline / --sql mode: proceed and emit full DDL
+
     op.create_table(
         "workstream_categories",
         sa.Column("id", postgresql.UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), primary_key=True, nullable=False),
@@ -30,7 +39,6 @@ def upgrade() -> None:
     )
     op.create_index("ix_workstream_categories_slug", "workstream_categories", ["slug"], unique=True)
 
-    # Seed initial categories
     op.execute(
         sa.text(
             "INSERT INTO workstream_categories (name, slug, display_code_prefix, display_order) VALUES "
