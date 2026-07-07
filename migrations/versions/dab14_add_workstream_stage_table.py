@@ -19,6 +19,13 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    try:
+        conn = op.get_bind()
+        if "workstream_stages" in sa.inspect(conn).get_table_names():
+            return
+    except sa.exc.NoInspectionAvailable:
+        pass
+
     op.create_table(
         "workstream_stages",
         sa.Column("id", postgresql.UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), primary_key=True, nullable=False),
