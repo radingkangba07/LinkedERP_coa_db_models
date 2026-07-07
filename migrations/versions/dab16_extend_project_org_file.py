@@ -19,6 +19,14 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    try:
+        conn = op.get_bind()
+        existing_cols = [c["name"] for c in sa.inspect(conn).get_columns("projects")]
+        if "display_code" in existing_cols:
+            return
+    except sa.exc.NoInspectionAvailable:
+        pass
+
     # project — display code component columns
     op.add_column("projects", sa.Column("display_code", sa.String(50), nullable=True))
     op.add_column("projects", sa.Column("display_code_org", sa.String(10), nullable=True))
