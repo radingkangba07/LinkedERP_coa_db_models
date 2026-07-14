@@ -20,6 +20,11 @@ class Project(Base):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    display_code: Mapped[str | None] = mapped_column(String(50), nullable=True, unique=True)
+    display_code_org: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    display_code_src: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    display_code_tgt: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    display_code_seq: Mapped[int | None] = mapped_column(Integer, nullable=True)
     source_system: Mapped[str] = mapped_column(String(100), nullable=False, server_default="")
     target_system: Mapped[str] = mapped_column(String(100), nullable=False, server_default="")
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="draft")
@@ -75,10 +80,7 @@ class ProjectMasterDataSelection(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("projects.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
     data_type: Mapped[str] = mapped_column(String(100), nullable=False)
     selected: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=sa_true())
@@ -89,10 +91,7 @@ class ProjectOpeningBalanceSelection(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("projects.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
     account_type: Mapped[str] = mapped_column(String(100), nullable=False)
     include: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=sa_true())
@@ -102,9 +101,7 @@ class ProjectWizardFields(Base):
     __tablename__ = "project_wizard_fields"
 
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("projects.id", ondelete="CASCADE"),
-        primary_key=True,
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
     )
     source_vendor_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     target_vendor_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
