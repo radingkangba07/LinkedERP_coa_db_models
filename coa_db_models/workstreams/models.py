@@ -59,8 +59,9 @@ class WorkstreamStage(Base):
     workstream_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("workstreams.id", ondelete="CASCADE"), nullable=False
     )
-    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
+    weight: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_by: Mapped[uuid.UUID | None] = mapped_column(
