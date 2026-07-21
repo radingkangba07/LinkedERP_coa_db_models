@@ -19,30 +19,29 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    try:
-        conn = op.get_bind()
-        if "workstream_categories" in sa.inspect(conn).get_table_names():
-            return
-    except sa.exc.NoInspectionAvailable:
-        pass
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
 
-    op.create_table(
-        "workstream_categories",
-        sa.Column("id", postgresql.UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), primary_key=True, nullable=False),
-        sa.Column("name", sa.String(100), nullable=False),
-        sa.Column("slug", sa.String(100), nullable=False),
-        sa.Column("display_code_prefix", sa.String(10), nullable=False),
-        sa.Column("display_order", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-    )
-    op.create_index("ix_workstream_categories_slug", "workstream_categories", ["slug"], unique=True)
+    if not inspector.has_table("workstream_categories"):
+        op.create_table(
+            "workstream_categories",
+            sa.Column("id", postgresql.UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), primary_key=True, nullable=False),
+            sa.Column("name", sa.String(100), nullable=False),
+            sa.Column("slug", sa.String(100), nullable=False),
+            sa.Column("display_code_prefix", sa.String(10), nullable=False),
+            sa.Column("display_order", sa.Integer(), nullable=False),
+            sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        )
+        op.create_index("ix_workstream_categories_slug", "workstream_categories", ["slug"], unique=True)
 
-    # Seed initial categories
+    # Always seed — idempotent on conflict so safe whether the table was just
+    # created above or already existed with no rows (early-return bug on test DB).
     op.execute(
         sa.text(
             "INSERT INTO workstream_categories (name, slug, display_code_prefix, display_order) VALUES "
             "('Master Data', 'master_data', 'MD', 1), "
-            "('Opening Balances', 'opening_balances', 'OB', 2)"
+            "('Opening Balances', 'opening_balances', 'OB', 2) "
+            "ON CONFLICT (slug) DO NOTHING"
         )
     )
 
