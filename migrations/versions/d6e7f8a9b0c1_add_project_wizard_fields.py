@@ -6,10 +6,12 @@ Create Date: 2026-06-29 00:00:00.000000
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy import inspect
 from sqlalchemy.dialects.postgresql import UUID
 
 # revision identifiers, used by Alembic.
@@ -21,20 +23,24 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.create_table(
-        "project_wizard_fields",
-        sa.Column("project_id", UUID(as_uuid=True), primary_key=True),
-        sa.Column("source_vendor_id", sa.String(100), nullable=True),
-        sa.Column("target_vendor_id", sa.String(100), nullable=True),
-        sa.Column("source_connection_method", sa.String(100), nullable=True),
-        sa.Column("target_connection_method", sa.String(100), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["project_id"],
-            ["projects.id"],
-            name="fk_project_wizard_fields_project_id",
-            ondelete="CASCADE",
-        ),
-    )
+    bind = op.get_bind()
+    inspector = inspect(bind)
+
+    if not inspector.has_table("project_wizard_fields"):
+        op.create_table(
+            "project_wizard_fields",
+            sa.Column("project_id", UUID(as_uuid=True), primary_key=True),
+            sa.Column("source_vendor_id", sa.String(100), nullable=True),
+            sa.Column("target_vendor_id", sa.String(100), nullable=True),
+            sa.Column("source_connection_method", sa.String(100), nullable=True),
+            sa.Column("target_connection_method", sa.String(100), nullable=True),
+            sa.ForeignKeyConstraint(
+                ["project_id"],
+                ["projects.id"],
+                name="fk_project_wizard_fields_project_id",
+                ondelete="CASCADE",
+            ),
+        )
 
 
 def downgrade() -> None:
