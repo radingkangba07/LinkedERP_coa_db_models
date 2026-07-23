@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -57,6 +57,9 @@ class ItemFieldProfile(Base):
     pattern_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     anomaly_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     anomaly_examples: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    semantic_role: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    confidence_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    evidence: Mapped[str | None] = mapped_column(Text, nullable=True)
     sample_values: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     stats: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
