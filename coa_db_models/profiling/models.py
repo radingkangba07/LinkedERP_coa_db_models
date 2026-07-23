@@ -45,7 +45,7 @@ class ItemFieldProfile(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     run_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False
     )
     field_name: Mapped[str] = mapped_column(String(255), nullable=False)
     detected_type: Mapped[str] = mapped_column(String(50), nullable=False, server_default="string")
@@ -77,7 +77,7 @@ class ItemProfileDecision(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     run_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False
     )
     field_name: Mapped[str] = mapped_column(String(255), nullable=False)
     action: Mapped[str] = mapped_column(String(20), nullable=False, server_default="review")
@@ -108,7 +108,7 @@ class ItemProfileAudit(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     decision_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_decisions.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("item_profile_decisions.id", ondelete="CASCADE"), nullable=False
     )
     changed_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
