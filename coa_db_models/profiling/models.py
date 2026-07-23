@@ -18,6 +18,7 @@ class ItemProfileRun(Base):
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
     source_row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    field_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
