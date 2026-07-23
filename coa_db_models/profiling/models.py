@@ -17,6 +17,7 @@ class ItemProfileRun(Base):
         UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
+    source_file_ref: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     source_row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     field_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -49,6 +50,8 @@ class ItemFieldProfile(Base):
     total_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     null_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     distinct_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    severity: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    cardinality: Mapped[str | None] = mapped_column(String(10), nullable=True)
     sample_values: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     stats: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
