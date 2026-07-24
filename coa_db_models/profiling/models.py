@@ -64,6 +64,7 @@ class ItemFieldProfile(Base):
     evidence: Mapped[str | None] = mapped_column(Text, nullable=True)
     sample_values: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     stats: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    odoo_target: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     run: Mapped["ItemProfileRun"] = relationship(back_populates="field_profiles")
