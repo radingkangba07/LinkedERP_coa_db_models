@@ -80,10 +80,10 @@ class ItemProfileDecision(Base):
         UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False
     )
     field_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    action: Mapped[str] = mapped_column(String(20), nullable=False, server_default="review")
-    target_field: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    action: Mapped[str] = mapped_column(String(50), nullable=False, server_default="review")
+    fix_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     transformation_config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    confidence: Mapped[float | None] = mapped_column(nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
     decided_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -97,10 +97,7 @@ class ItemProfileDecision(Base):
         back_populates="decision", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
-        UniqueConstraint("run_id", "field_name", name="uq_decision_run_field"),
-        Index("ix_item_profile_decisions_run_id", "run_id"),
-    )
+    __table_args__ = (Index("ix_item_profile_decisions_run_id", "run_id"),)
 
 
 class ItemProfileAudit(Base):
