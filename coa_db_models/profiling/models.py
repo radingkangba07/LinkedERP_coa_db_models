@@ -20,6 +20,7 @@ class ItemProfileRun(Base):
     source_file_ref: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     source_row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     field_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    migration_key_field: Mapped[str | None] = mapped_column(String(255), nullable=True)
     error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
     duplicate_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     cross_subsidiary_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
