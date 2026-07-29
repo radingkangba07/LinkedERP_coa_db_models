@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -11,14 +11,32 @@ from coa_db_models.base import Base
 
 class ItemProfileRun(Base):
     __tablename__ = "item_profile_runs"
+    __table_args__ = (
+        Index("ix_item_profile_runs_status", "status"),
+        # Dashboard: list runs per project filtered by status
+        Index("ix_item_profile_runs_project_status", "project_id", "status"),
+        # Chronological project listing
+        Index("ix_item_profile_runs_project_created", "project_id", "created_at"),
+        {"schema": "item_profile"},
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("public.projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
+    source_file_ref: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     source_row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    field_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    migration_key_field: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    fields_processed: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    duplicate_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    cross_subsidiary_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    invalid_uom_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    missing_product_type_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    interpretation_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recommended_actions: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -33,23 +51,30 @@ class ItemProfileRun(Base):
         back_populates="run", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (Index("ix_item_profile_runs_status", "status"),)
-
 
 class ItemFieldProfile(Base):
     __tablename__ = "item_field_profiles"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     run_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("item_profile.item_profile_runs.id", ondelete="CASCADE"), nullable=False
     )
     field_name: Mapped[str] = mapped_column(String(255), nullable=False)
     detected_type: Mapped[str] = mapped_column(String(50), nullable=False, server_default="string")
     total_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     null_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     distinct_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    severity: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    cardinality: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    pattern_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    anomaly_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    anomaly_examples: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    semantic_role: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    confidence_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    evidence: Mapped[str | None] = mapped_column(Text, nullable=True)
     sample_values: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     stats: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    erp_target: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     run: Mapped["ItemProfileRun"] = relationship(back_populates="field_profiles")
@@ -57,6 +82,13 @@ class ItemFieldProfile(Base):
     __table_args__ = (
         UniqueConstraint("run_id", "field_name", name="uq_field_profile_run_field"),
         Index("ix_item_field_profiles_run_id", "run_id"),
+        # Role-filtered field list within a run
+        Index("ix_item_field_profiles_run_role", "run_id", "semantic_role"),
+        # Severity-filtered field list within a run
+        Index("ix_item_field_profiles_run_severity", "run_id", "severity"),
+        # GIN for JSONB stats queries (outlier_count, text_len_mean, etc.)
+        Index("ix_item_field_profiles_stats_gin", "stats", postgresql_using="gin"),
+        {"schema": "item_profile"},
     )
 
 
@@ -65,15 +97,15 @@ class ItemProfileDecision(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     run_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("item_profile.item_profile_runs.id", ondelete="CASCADE"), nullable=False
     )
     field_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    action: Mapped[str] = mapped_column(String(20), nullable=False, server_default="review")
-    target_field: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    action: Mapped[str] = mapped_column(String(50), nullable=False, server_default="review")
+    fix_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     transformation_config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    confidence: Mapped[float | None] = mapped_column(nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
     decided_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+        UUID(as_uuid=True), ForeignKey("public.users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -86,8 +118,10 @@ class ItemProfileDecision(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("run_id", "field_name", name="uq_decision_run_field"),
         Index("ix_item_profile_decisions_run_id", "run_id"),
+        # Pending/approved decision queries within a run
+        Index("ix_item_profile_decisions_run_status", "run_id", "status"),
+        {"schema": "item_profile"},
     )
 
 
@@ -96,10 +130,10 @@ class ItemProfileAudit(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     decision_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_decisions.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("item_profile.item_profile_decisions.id", ondelete="CASCADE"), nullable=False
     )
     changed_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=True), ForeignKey("public.users.id", ondelete="SET NULL"), nullable=True
     )
     previous_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     new_state: Mapped[dict] = mapped_column(JSONB, nullable=False)
@@ -107,4 +141,9 @@ class ItemProfileAudit(Base):
 
     decision: Mapped["ItemProfileDecision"] = relationship(back_populates="audit_log")
 
-    __table_args__ = (Index("ix_item_profile_audit_decision_id", "decision_id"),)
+    __table_args__ = (
+        Index("ix_item_profile_audit_decision_id", "decision_id"),
+        # Audit queries by actor
+        Index("ix_item_profile_audit_changed_by", "changed_by"),
+        {"schema": "item_profile"},
+    )
