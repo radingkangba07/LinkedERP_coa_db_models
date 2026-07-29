@@ -11,10 +11,18 @@ from coa_db_models.base import Base
 
 class ItemProfileRun(Base):
     __tablename__ = "item_profile_runs"
+    __table_args__ = (
+        Index("ix_item_profile_runs_status", "status"),
+        # Dashboard: list runs per project filtered by status
+        Index("ix_item_profile_runs_project_status", "project_id", "status"),
+        # Chronological project listing
+        Index("ix_item_profile_runs_project_created", "project_id", "created_at"),
+        {"schema": "item_profile"},
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("public.projects.id", ondelete="CASCADE"), nullable=False, index=True
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
     source_file_ref: Mapped[str | None] = mapped_column(String(1024), nullable=True)
@@ -43,15 +51,13 @@ class ItemProfileRun(Base):
         back_populates="run", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (Index("ix_item_profile_runs_status", "status"),)
-
 
 class ItemFieldProfile(Base):
     __tablename__ = "item_field_profiles"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     run_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True), ForeignKey("item_profile.item_profile_runs.id", ondelete="CASCADE"), nullable=False
     )
     field_name: Mapped[str] = mapped_column(String(255), nullable=False)
     detected_type: Mapped[str] = mapped_column(String(50), nullable=False, server_default="string")
@@ -76,6 +82,13 @@ class ItemFieldProfile(Base):
     __table_args__ = (
         UniqueConstraint("run_id", "field_name", name="uq_field_profile_run_field"),
         Index("ix_item_field_profiles_run_id", "run_id"),
+        # Role-filtered field list within a run
+        Index("ix_item_field_profiles_run_role", "run_id", "semantic_role"),
+        # Severity-filtered field list within a run
+        Index("ix_item_field_profiles_run_severity", "run_id", "severity"),
+        # GIN for JSONB stats queries (outlier_count, text_len_mean, etc.)
+        Index("ix_item_field_profiles_stats_gin", "stats", postgresql_using="gin"),
+        {"schema": "item_profile"},
     )
 
 
@@ -84,7 +97,7 @@ class ItemProfileDecision(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     run_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_runs.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True), ForeignKey("item_profile.item_profile_runs.id", ondelete="CASCADE"), nullable=False
     )
     field_name: Mapped[str] = mapped_column(String(255), nullable=False)
     action: Mapped[str] = mapped_column(String(50), nullable=False, server_default="review")
@@ -92,7 +105,7 @@ class ItemProfileDecision(Base):
     transformation_config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
     decided_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+        UUID(as_uuid=True), ForeignKey("public.users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -104,7 +117,12 @@ class ItemProfileDecision(Base):
         back_populates="decision", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (Index("ix_item_profile_decisions_run_id", "run_id"),)
+    __table_args__ = (
+        Index("ix_item_profile_decisions_run_id", "run_id"),
+        # Pending/approved decision queries within a run
+        Index("ix_item_profile_decisions_run_status", "run_id", "status"),
+        {"schema": "item_profile"},
+    )
 
 
 class ItemProfileAudit(Base):
@@ -112,10 +130,10 @@ class ItemProfileAudit(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     decision_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("item_profile_decisions.id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True), ForeignKey("item_profile.item_profile_decisions.id", ondelete="CASCADE"), nullable=False
     )
     changed_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=True), ForeignKey("public.users.id", ondelete="SET NULL"), nullable=True
     )
     previous_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     new_state: Mapped[dict] = mapped_column(JSONB, nullable=False)
@@ -123,4 +141,9 @@ class ItemProfileAudit(Base):
 
     decision: Mapped["ItemProfileDecision"] = relationship(back_populates="audit_log")
 
-    __table_args__ = (Index("ix_item_profile_audit_decision_id", "decision_id"),)
+    __table_args__ = (
+        Index("ix_item_profile_audit_decision_id", "decision_id"),
+        # Audit queries by actor
+        Index("ix_item_profile_audit_changed_by", "changed_by"),
+        {"schema": "item_profile"},
+    )
