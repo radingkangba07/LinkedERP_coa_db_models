@@ -25,6 +25,9 @@ class Workstream(Base):
     __tablename__ = "workstreams"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    org_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
+    )
     project_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
     )
@@ -47,6 +50,7 @@ class Workstream(Base):
 
     __table_args__ = (
         UniqueConstraint("project_id", "display_code", name="uq_workstream_project_display_code"),
+        Index("ix_workstreams_org_id", "org_id"),
         Index("ix_workstreams_project_id", "project_id"),
         Index("ix_workstreams_status", "status"),
     )
