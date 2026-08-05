@@ -10,6 +10,16 @@ from sqlalchemy.sql.expression import true as sa_true
 from coa_db_models.base import Base
 
 
+class MasterDataEntity(Base):
+    __tablename__ = "master_data_entities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    slug: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=sa_true())
+
+
 class WorkstreamCategory(Base):
     __tablename__ = "workstream_categories"
 
@@ -47,12 +57,17 @@ class Workstream(Base):
     created_by: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
     )
+    entity_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("master_data_entities.id", ondelete="RESTRICT"), nullable=True
+    )
 
     __table_args__ = (
         UniqueConstraint("project_id", "display_code", name="uq_workstream_project_display_code"),
+        UniqueConstraint("project_id", "entity_id", name="uq_workstream_project_entity"),
         Index("ix_workstreams_org_id", "org_id"),
         Index("ix_workstreams_project_id", "project_id"),
         Index("ix_workstreams_status", "status"),
+        Index("ix_workstreams_entity_id", "entity_id"),
     )
 
 
