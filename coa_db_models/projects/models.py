@@ -127,22 +127,37 @@ class ProjectWizardFields(Base):
 
 
 class ProjectDisplayCode(Base):
-    """Stores the assembled display code and its component parts for an org project.
+    """Display code for either a COA project or an org project.
 
-    Extracted to its own table so display-code concerns stay separate.
-    Exactly one row per org_project (or none, for drafts not yet assigned a code).
+    Exactly one of project_id / org_project_id is set (XOR).
+    Sequence is global per (org_part, source_part, target_part) prefix so
+    codes are unique across both project types within an organisation.
     """
 
     __tablename__ = "project_display_codes"
 
-    org_project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("org_projects.id", ondelete="CASCADE"), primary_key=True
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True, unique=True
+    )
+    org_project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("org_projects.id", ondelete="CASCADE"), nullable=True, unique=True
     )
     display_code: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     org_part: Mapped[str] = mapped_column(String(10), nullable=False)
     source_part: Mapped[str] = mapped_column(String(10), nullable=False)
     target_part: Mapped[str] = mapped_column(String(10), nullable=False)
     seq: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL AND org_project_id IS NULL) OR "
+            "(project_id IS NULL AND org_project_id IS NOT NULL)",
+            name="ck_display_codes_project_xor",
+        ),
+    )
 
 
 class OrgProject(Base):
