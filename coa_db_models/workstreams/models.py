@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint, text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -38,8 +38,11 @@ class Workstream(Base):
     org_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
     )
-    project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True
+    )
+    org_project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("org_projects.id", ondelete="CASCADE"), nullable=True
     )
     category_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("workstream_categories.id", ondelete="RESTRICT"), nullable=False
@@ -62,10 +65,18 @@ class Workstream(Base):
     )
 
     __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL AND org_project_id IS NULL) OR "
+            "(project_id IS NULL AND org_project_id IS NOT NULL)",
+            name="ck_workstream_project_xor",
+        ),
         UniqueConstraint("project_id", "display_code", name="uq_workstream_project_display_code"),
+        UniqueConstraint("org_project_id", "display_code", name="uq_workstream_org_project_display_code"),
         UniqueConstraint("project_id", "entity_id", name="uq_workstream_project_entity"),
+        UniqueConstraint("org_project_id", "entity_id", name="uq_workstream_org_project_entity"),
         Index("ix_workstreams_org_id", "org_id"),
         Index("ix_workstreams_project_id", "project_id"),
+        Index("ix_workstreams_org_project_id", "org_project_id"),
         Index("ix_workstreams_status", "status"),
         Index("ix_workstreams_entity_id", "entity_id"),
     )
