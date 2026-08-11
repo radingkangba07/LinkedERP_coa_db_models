@@ -85,9 +85,8 @@ class ProjectMasterDataSelection(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL AND org_project_id IS NULL) OR "
-            "(project_id IS NULL AND org_project_id IS NOT NULL)",
-            name="ck_master_data_sel_project_xor",
+            "(project_id IS NOT NULL OR org_project_id IS NOT NULL)",
+            name="ck_master_data_sel_at_least_one",
         ),
     )
 
