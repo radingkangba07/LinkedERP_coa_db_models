@@ -97,6 +97,18 @@ jobs:
             git fetch origin
             git reset --hard "origin/${DB_REF}"
 
+            # Self-heal: if the testing DB has a revision from a different branch
+            # that this branch does not know about, stamp to this branch's head
+            # so the upgrade can proceed. If the revision is already known, this
+            # is a no-op.
+            docker run --rm \
+              --network coa-testing_coa-testing \
+              -v "${DB_MODELS_DIR}:/app" \
+              -w /app \
+              --env-file "${ENV_DIR}/.env.testing" \
+              ghcr.io/astral-sh/uv:python3.13-alpine \
+              sh -c "uv sync --dev && (uv run alembic current >/dev/null 2>&1 || uv run alembic stamp --purge \$(uv run alembic heads --resolve-dependencies | awk '{print \$1}' | head -1))"
+
             # Run alembic inside the Docker network so it can reach the
             # postgres service. Mount the coa-db-models checkout and
             # use the same DATABASE_URL as the backend (from .env.testing).
