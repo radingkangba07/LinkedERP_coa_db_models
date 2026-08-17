@@ -20,11 +20,6 @@ class Project(Base):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    display_code: Mapped[str | None] = mapped_column(String(50), nullable=True, unique=True)
-    display_code_org: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    display_code_src: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    display_code_tgt: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    display_code_seq: Mapped[int | None] = mapped_column(Integer, nullable=True)
     source_system: Mapped[str] = mapped_column(String(100), nullable=False, server_default="")
     target_system: Mapped[str] = mapped_column(String(100), nullable=False, server_default="")
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="draft")
@@ -107,3 +102,23 @@ class ProjectWizardFields(Base):
     target_vendor_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     source_connection_method: Mapped[str | None] = mapped_column(String(100), nullable=True)
     target_connection_method: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+
+class ProjectDisplayCode(Base):
+    """Stores the assembled display code and its component parts for a project.
+
+    Extracted from the projects table so display-code concerns live in their
+    own table. Exactly one row per project (or none, for draft projects that
+    have not yet been assigned a code).
+    """
+
+    __tablename__ = "project_display_codes"
+
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    display_code: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    org_part: Mapped[str] = mapped_column(String(10), nullable=False)
+    source_part: Mapped[str] = mapped_column(String(10), nullable=False)
+    target_part: Mapped[str] = mapped_column(String(10), nullable=False)
+    seq: Mapped[int] = mapped_column(Integer, nullable=False)
