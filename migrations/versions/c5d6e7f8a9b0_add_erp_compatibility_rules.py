@@ -42,6 +42,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_index("ix_compat_target", table_name="erp_compatibility_rules")
-    op.drop_index("ix_compat_source", table_name="erp_compatibility_rules")
-    op.drop_table("erp_compatibility_rules")
+    op.execute("DROP INDEX IF EXISTS ix_compat_target")
+    op.execute("DROP INDEX IF EXISTS ix_compat_source")
+    op.execute("DROP TABLE IF EXISTS erp_compatibility_rules")
