@@ -125,6 +125,13 @@ def upgrade() -> None:
             "fk_workstreams_org_project_id", "workstreams", "org_projects", ["org_project_id"], ["id"], ondelete="CASCADE"
         )
     if "ck_workstream_project_xor" not in ws_checks:
+        bind.execute(sa.text(
+            "UPDATE workstreams SET org_project_id = NULL "
+            "WHERE project_id IS NOT NULL AND org_project_id IS NOT NULL"
+        ))
+        bind.execute(sa.text(
+            "DELETE FROM workstreams WHERE project_id IS NULL AND org_project_id IS NULL"
+        ))
         op.create_check_constraint(
             "ck_workstream_project_xor",
             "workstreams",
@@ -155,6 +162,13 @@ def upgrade() -> None:
             "fk_project_files_org_project_id", "project_files", "org_projects", ["org_project_id"], ["id"], ondelete="CASCADE"
         )
     if "ck_project_files_project_xor" not in pf_checks:
+        bind.execute(sa.text(
+            "UPDATE project_files SET org_project_id = NULL "
+            "WHERE project_id IS NOT NULL AND org_project_id IS NOT NULL"
+        ))
+        bind.execute(sa.text(
+            "DELETE FROM project_files WHERE project_id IS NULL AND org_project_id IS NULL"
+        ))
         op.create_check_constraint(
             "ck_project_files_project_xor",
             "project_files",
@@ -177,6 +191,13 @@ def upgrade() -> None:
             "fk_jobs_org_project_id", "jobs", "org_projects", ["org_project_id"], ["id"], ondelete="CASCADE"
         )
     if "ck_jobs_project_xor" not in j_checks:
+        bind.execute(sa.text(
+            "UPDATE jobs SET org_project_id = NULL "
+            "WHERE project_id IS NOT NULL AND org_project_id IS NOT NULL"
+        ))
+        bind.execute(sa.text(
+            "DELETE FROM jobs WHERE project_id IS NULL AND org_project_id IS NULL"
+        ))
         op.create_check_constraint(
             "ck_jobs_project_xor",
             "jobs",
@@ -209,6 +230,14 @@ def upgrade() -> None:
             ondelete="CASCADE",
         )
     if "ck_master_data_sel_project_xor" not in mds_checks:
+        bind.execute(sa.text(
+            "UPDATE project_master_data_selections SET org_project_id = NULL "
+            "WHERE project_id IS NOT NULL AND org_project_id IS NOT NULL"
+        ))
+        bind.execute(sa.text(
+            "DELETE FROM project_master_data_selections "
+            "WHERE project_id IS NULL AND org_project_id IS NULL"
+        ))
         op.create_check_constraint(
             "ck_master_data_sel_project_xor",
             "project_master_data_selections",
@@ -243,6 +272,14 @@ def upgrade() -> None:
             ondelete="CASCADE",
         )
     if "ck_opening_bal_sel_project_xor" not in obs_checks:
+        bind.execute(sa.text(
+            "UPDATE project_opening_balance_selections SET org_project_id = NULL "
+            "WHERE project_id IS NOT NULL AND org_project_id IS NOT NULL"
+        ))
+        bind.execute(sa.text(
+            "DELETE FROM project_opening_balance_selections "
+            "WHERE project_id IS NULL AND org_project_id IS NULL"
+        ))
         op.create_check_constraint(
             "ck_opening_bal_sel_project_xor",
             "project_opening_balance_selections",
