@@ -80,14 +80,13 @@ class ProjectMasterDataSelection(Base):
     org_project_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("org_projects.id", ondelete="CASCADE"), nullable=True, index=True
     )
-    data_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    scope_name: Mapped[str] = mapped_column(String(100), nullable=False)
     selected: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=sa_true())
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL AND org_project_id IS NULL) OR "
-            "(project_id IS NULL AND org_project_id IS NOT NULL)",
-            name="ck_master_data_sel_project_xor",
+            "(project_id IS NOT NULL OR org_project_id IS NOT NULL)",
+            name="ck_master_data_sel_at_least_one",
         ),
     )
 

@@ -47,7 +47,7 @@ class Workstream(Base):
     category_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("workstream_categories.id", ondelete="RESTRICT"), nullable=False
     )
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope_name: Mapped[str] = mapped_column(String(255), nullable=False)
     display_code: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, server_default="not_started")
     current_stage: Mapped[str] = mapped_column(String(50), nullable=False, server_default="erp_select")
