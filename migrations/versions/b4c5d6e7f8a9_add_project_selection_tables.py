@@ -69,7 +69,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_index("ix_project_opening_balance_project_id", table_name="project_opening_balance_selections")
-    op.drop_table("project_opening_balance_selections")
-    op.drop_index("ix_project_master_data_project_id", table_name="project_master_data_selections")
-    op.drop_table("project_master_data_selections")
+    op.execute("DROP INDEX IF EXISTS ix_project_opening_balance_project_id")
+    op.execute("DROP TABLE IF EXISTS project_opening_balance_selections")
+    op.execute("DROP INDEX IF EXISTS ix_project_master_data_project_id")
+    op.execute("DROP TABLE IF EXISTS project_master_data_selections")

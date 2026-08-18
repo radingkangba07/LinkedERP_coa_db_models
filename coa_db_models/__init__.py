@@ -7,6 +7,10 @@ from coa_db_models.projects.models import (
     ProjectMasterDataSelection,
     ProjectOpeningBalanceSelection,
     ProjectWizardFields,
+    ProjectDisplayCode,
+    OrgProject,
+    OrgProjectAccess,
+    OrgProjectWizardFields,
 )
 from coa_db_models.jobs.models import Job
 from coa_db_models.mappings.models import CoaMapping, CoaMappingSuggestion, CoaMappingHistory, AccountTypeMapping, CoaEmbeddingStore
@@ -20,7 +24,8 @@ __all__ = [
     "Base",
     "User", "Organization", "OrganizationMember", "RefreshToken", "OrganizationInvitation",
     "ErpCompatibilityRule",
-    "Project", "ProjectAccess", "ProjectMasterDataSelection", "ProjectOpeningBalanceSelection", "ProjectWizardFields",
+    "Project", "ProjectAccess", "ProjectMasterDataSelection", "ProjectOpeningBalanceSelection", "ProjectWizardFields", "ProjectDisplayCode",
+    "OrgProject", "OrgProjectAccess", "OrgProjectWizardFields",
     "Job",
     "CoaMapping", "CoaMappingSuggestion", "CoaMappingHistory", "AccountTypeMapping", "CoaEmbeddingStore",
     "File",
