@@ -29,11 +29,18 @@ depends_on = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {c["name"] for c in inspector.get_columns("workstreams")}
+    fks = {fk["name"] for fk in inspector.get_foreign_keys("workstreams")}
+    indexes = {ix["name"] for ix in inspector.get_indexes("workstreams")}
+
     # 1. Add org_id as nullable first so existing rows don't violate NOT NULL
-    op.add_column(
-        "workstreams",
-        sa.Column("org_id", sa.UUID(), nullable=True),
-    )
+    if "org_id" not in columns:
+        op.add_column(
+            "workstreams",
+            sa.Column("org_id", sa.UUID(), nullable=True),
+        )
 
     # 2. Backfill org_id from the parent project
     op.execute(
@@ -42,6 +49,7 @@ def upgrade() -> None:
         SET org_id = p.org_id
         FROM projects p
         WHERE w.project_id = p.id
+          AND w.org_id IS NULL
         """
     )
 
@@ -49,20 +57,31 @@ def upgrade() -> None:
     op.alter_column("workstreams", "org_id", nullable=False)
 
     # 4. Add FK constraint to organizations
-    op.create_foreign_key(
-        "fk_workstreams_org_id",
-        "workstreams",
-        "organizations",
-        ["org_id"],
-        ["id"],
-        ondelete="CASCADE",
-    )
+    if "fk_workstreams_org_id" not in fks:
+        op.create_foreign_key(
+            "fk_workstreams_org_id",
+            "workstreams",
+            "organizations",
+            ["org_id"],
+            ["id"],
+            ondelete="CASCADE",
+        )
 
     # 5. Add index on org_id for query performance
-    op.create_index("ix_workstreams_org_id", "workstreams", ["org_id"])
+    if "ix_workstreams_org_id" not in indexes:
+        op.create_index("ix_workstreams_org_id", "workstreams", ["org_id"])
 
 
 def downgrade() -> None:
-    op.drop_index("ix_workstreams_org_id", table_name="workstreams")
-    op.drop_constraint("fk_workstreams_org_id", "workstreams", type_="foreignkey")
-    op.drop_column("workstreams", "org_id")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    indexes = {ix["name"] for ix in inspector.get_indexes("workstreams")}
+    fks = {fk["name"] for fk in inspector.get_foreign_keys("workstreams")}
+    columns = {c["name"] for c in inspector.get_columns("workstreams")}
+
+    if "ix_workstreams_org_id" in indexes:
+        op.drop_index("ix_workstreams_org_id", table_name="workstreams")
+    if "fk_workstreams_org_id" in fks:
+        op.drop_constraint("fk_workstreams_org_id", "workstreams", type_="foreignkey")
+    if "org_id" in columns:
+        op.drop_column("workstreams", "org_id")
