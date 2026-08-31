@@ -64,6 +64,7 @@ class ProjectAccess(Base):
         UniqueConstraint("user_id", "project_id", name="uq_user_project"),
         Index("ix_project_access_user_id", "user_id"),
         Index("ix_project_access_project_id", "project_id"),
+        CheckConstraint("permission IN ('owner', 'editor', 'viewer')", name="chk_project_access_permission"),
     )
 
 
@@ -208,6 +209,7 @@ class OrgProjectAccess(Base):
         UniqueConstraint("user_id", "org_project_id", name="uq_user_org_project"),
         Index("ix_org_project_access_user_id", "user_id"),
         Index("ix_org_project_access_org_project_id", "org_project_id"),
+        CheckConstraint("permission IN ('owner', 'editor', 'viewer')", name="chk_org_project_access_permission"),
     )
 
 

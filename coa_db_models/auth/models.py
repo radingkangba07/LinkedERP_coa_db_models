@@ -78,10 +78,13 @@ class OrganizationMember(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False)
-    role: Mapped[str] = mapped_column(String(50), nullable=False, server_default="member")
+    role: Mapped[str] = mapped_column(String(50), nullable=False, server_default="viewer")
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
-    __table_args__ = (UniqueConstraint("user_id", "org_id"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "org_id"),
+        CheckConstraint("role IN ('admin', 'modifier', 'viewer')", name="chk_org_member_role"),
+    )
 
 
 class RefreshToken(Base):
@@ -103,7 +106,7 @@ class OrganizationInvitation(Base):
         UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
     )
     email: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[str] = mapped_column(String(50), nullable=False, server_default="member")
+    role: Mapped[str] = mapped_column(String(50), nullable=False, server_default="viewer")
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="pending")
     token: Mapped[str] = mapped_column(String(500), nullable=False, unique=True)
     invited_by: Mapped[uuid.UUID] = mapped_column(
@@ -114,4 +117,5 @@ class OrganizationInvitation(Base):
 
     __table_args__ = (
         UniqueConstraint("org_id", "email", name="uq_org_invitations_org_email"),
+        CheckConstraint("role IN ('admin', 'modifier', 'viewer')", name="chk_org_invitation_role"),
     )
