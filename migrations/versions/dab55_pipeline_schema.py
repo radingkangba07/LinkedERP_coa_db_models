@@ -62,6 +62,11 @@ def upgrade() -> None:
         sa.Column("run_id", UUID(as_uuid=True), sa.ForeignKey("pipeline_runs.id", ondelete="CASCADE"), nullable=False),
         sa.Column("field_name", sa.String(255), nullable=False),
         sa.Column("detected_type", sa.String(50), nullable=True),
+        sa.Column("format_detected", sa.String(20), nullable=True),
+        sa.Column("user_override_type", sa.String(20), nullable=True),
+        sa.Column("override_status", sa.String(20), nullable=True),
+        sa.Column("overridden_by", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column("overridden_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("total_count", sa.Integer(), nullable=True),
         sa.Column("null_count", sa.Integer(), nullable=True),
         sa.Column("distinct_count", sa.Integer(), nullable=True),
@@ -92,6 +97,14 @@ def upgrade() -> None:
             name="ck_field_profiles_detected_type",
         ),
         sa.CheckConstraint(
+            "user_override_type IS NULL OR user_override_type IN ('text','integer','decimal','date','boolean')",
+            name="ck_field_profiles_override_type",
+        ),
+        sa.CheckConstraint(
+            "override_status IS NULL OR override_status IN ('pending','complete')",
+            name="ck_field_profiles_override_status",
+        ),
+        sa.CheckConstraint(
             "semantic_role IS NULL OR semantic_role IN "
             "('identifier_candidate','display_name','descriptive_text','measure','value_list','timestamp','ambiguous')",
             name="ck_field_profiles_semantic_role",
@@ -100,6 +113,7 @@ def upgrade() -> None:
     op.create_index("ix_field_profiles_run_id", "field_profiles", ["run_id"])
     op.create_index("ix_field_profiles_run_field", "field_profiles", ["run_id", "field_name"])
     op.create_index("ix_field_profiles_run_severity", "field_profiles", ["run_id", "severity"])
+    op.create_index("ix_field_profiles_run_override_status", "field_profiles", ["run_id", "override_status"])
 
     op.create_index(
         "ix_project_files_org_project_type_active",
@@ -111,6 +125,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("ix_project_files_org_project_type_active", table_name="project_files")
+    op.drop_index("ix_field_profiles_run_override_status", table_name="field_profiles")
     op.drop_index("ix_field_profiles_run_severity", table_name="field_profiles")
     op.drop_index("ix_field_profiles_run_field", table_name="field_profiles")
     op.drop_index("ix_field_profiles_run_id", table_name="field_profiles")

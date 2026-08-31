@@ -98,6 +98,19 @@ class FieldProfile(Base):
     # --- scalar dimensions (match analyse_column() return keys exactly) ---
     field_name: Mapped[str] = mapped_column(String(255), nullable=False)
     detected_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # format_detected: set for compact date formats (e.g. YYYYMMDD, DDMMYYYY); NULL for all others
+    format_detected: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # user_override_type: what the user chose; NULL = use detected_type
+    user_override_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # override_status: pending = ML re-analysis queued; complete = stats updated; NULL = no override
+    override_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # audit: who requested the override and when
+    overridden_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    overridden_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     total_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     null_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     distinct_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -140,6 +153,14 @@ class FieldProfile(Base):
             name="ck_field_profiles_detected_type",
         ),
         CheckConstraint(
+            "user_override_type IS NULL OR user_override_type IN ('text','integer','decimal','date','boolean')",
+            name="ck_field_profiles_override_type",
+        ),
+        CheckConstraint(
+            "override_status IS NULL OR override_status IN ('pending','complete')",
+            name="ck_field_profiles_override_status",
+        ),
+        CheckConstraint(
             "semantic_role IS NULL OR semantic_role IN "
             "('identifier_candidate','display_name','descriptive_text','measure','value_list','timestamp','ambiguous')",
             name="ck_field_profiles_semantic_role",
@@ -147,4 +168,6 @@ class FieldProfile(Base):
         Index("ix_field_profiles_run_id", "run_id"),
         Index("ix_field_profiles_run_field", "run_id", "field_name"),
         Index("ix_field_profiles_run_severity", "run_id", "severity"),
+        # Used by the "block navigation if any override pending" gate
+        Index("ix_field_profiles_run_override_status", "run_id", "override_status"),
     )
