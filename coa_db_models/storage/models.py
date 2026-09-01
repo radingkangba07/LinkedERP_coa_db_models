@@ -57,4 +57,10 @@ class File(Base):
             "file_type",
             postgresql_where=text("is_active"),
         ),
+        Index(
+            "ix_project_files_org_project_type_active",
+            "org_project_id",
+            "file_type",
+            postgresql_where=text("is_active"),
+        ),
     )
