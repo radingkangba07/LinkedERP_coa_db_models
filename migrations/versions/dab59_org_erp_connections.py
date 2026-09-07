@@ -1,4 +1,4 @@
-"""dab59: add org_erp_connections and connection_credentials tables
+"""dab59: add org_erp_connections table
 
 Revision ID: dab59
 Revises: dab58
@@ -8,7 +8,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects.postgresql import BYTEA, JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 revision: str = "dab59"
 down_revision: Union[str, Sequence[str], None] = "dab58"
@@ -27,8 +27,6 @@ def upgrade() -> None:
         sa.Column("base_url", sa.String(500), nullable=False),
         sa.Column("auth_strategy", sa.String(20), nullable=False),
         sa.Column("erp_config", JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
-        sa.Column("encrypted_oauth_data", BYTEA, nullable=True),
-        sa.Column("token_expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("status", sa.String(30), nullable=False, server_default="active"),
         sa.Column("consecutive_failures", sa.Integer, nullable=False, server_default="0"),
         sa.Column("health_checked_at", sa.DateTime(timezone=True), nullable=True),
@@ -45,7 +43,7 @@ def upgrade() -> None:
             name="ck_org_erp_connections_auth_strategy",
         ),
         sa.CheckConstraint(
-            "status IN ('active','pending_oauth','broken','credential_error','requires_reauth','tally_unreachable','version_mismatch')",
+            "status IN ('active','broken','requires_reauth','tally_unreachable')",
             name="ck_org_erp_connections_status",
         ),
     )
@@ -69,28 +67,8 @@ def upgrade() -> None:
         postgresql_where=sa.text("status = 'active'"),
     )
 
-    op.create_table(
-        "connection_credentials",
-        sa.Column("id", UUID(as_uuid=True), primary_key=True),
-        sa.Column(
-            "connection_id",
-            UUID(as_uuid=True),
-            sa.ForeignKey("org_erp_connections.id", ondelete="CASCADE"),
-            nullable=False,
-        ),
-        sa.Column("import_job_id", UUID(as_uuid=True), nullable=False),
-        sa.Column("encrypted_blob", BYTEA, nullable=False),
-        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-    )
-
-    op.create_index("ix_connection_credentials_connection_id", "connection_credentials", ["connection_id"])
-    op.create_index("ix_connection_credentials_import_job_id", "connection_credentials", ["import_job_id"])
-
 
 def downgrade() -> None:
-    op.drop_table("connection_credentials")
     op.drop_index("uix_org_erp_connections_active", table_name="org_erp_connections")
     op.drop_index("uix_org_erp_connections_org_label", table_name="org_erp_connections")
     op.drop_index("ix_org_erp_connections_org_id", table_name="org_erp_connections")
