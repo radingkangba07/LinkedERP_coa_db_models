@@ -54,7 +54,7 @@ class OrgERPConnection(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     __table_args__ = (
-        CheckConstraint("erp_id IN ('odoo','netsuite','tally')", name="ck_org_erp_connections_erp_id"),
+        CheckConstraint("erp_id IN ('odoo','netsuite','tally','generic')", name="ck_org_erp_connections_erp_id"),
         CheckConstraint("connection_role IN ('source','target')", name="ck_org_erp_connections_role"),
         CheckConstraint(
             "auth_strategy IN ('api_key','tba','oauth2','bearer','tally_xml')",
