@@ -13,6 +13,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -374,10 +375,6 @@ class OrgMappingBookmark(Base):
             f"mapping_type IN ({_VALID_BOOKMARK_TYPES})",
             name="ck_org_mapping_bookmarks_type",
         ),
-        Index(
-            "uix_org_mapping_bookmarks",
-            "org_id", "erp_id", "scope", "source_field", "mapping_type",
-            unique=True,
-        ),
+        UniqueConstraint("org_id", "erp_id", "scope", "source_field", "mapping_type", name="uix_org_mapping_bookmarks"),
         Index("ix_org_mapping_bookmarks_org_erp_scope_type", "org_id", "erp_id", "scope", "mapping_type"),
     )
