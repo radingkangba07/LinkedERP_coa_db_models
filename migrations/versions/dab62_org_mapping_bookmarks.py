@@ -1,7 +1,7 @@
-"""dab59: add org_mapping_bookmarks table
+"""dab62: add org_mapping_bookmarks table
 
-Revision ID: dab59
-Revises: dab58
+Revision ID: dab62
+Revises: dab61
 """
 
 from typing import Sequence, Union
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
-revision: str = "dab59"
-down_revision: Union[str, Sequence[str], None] = "dab58"
+revision: str = "dab62"
+down_revision: Union[str, Sequence[str], None] = "dab61"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
