@@ -32,9 +32,13 @@ def upgrade() -> None:
         sa.Column("required", sa.Boolean, nullable=False, server_default=sa.text("false")),
         sa.Column("read_only", sa.Boolean, nullable=False, server_default=sa.text("false")),
         sa.Column("identifier", sa.Boolean, nullable=False, server_default=sa.text("false")),
-        sa.Column("source", sa.String(20), nullable=False, server_default="seed"),
+        sa.Column("source", sa.String(20), nullable=False, server_default=sa.text("'seed'")),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.CheckConstraint("source IN ('seed','upload','mcp')", name="ck_target_fields_source"),
+        sa.CheckConstraint(
+            "scope IN ('items','customers','vendors','locations','contacts','vehicles','equipment','fixed_assets')",
+            name="ck_target_fields_scope",
+        ),
     )
     op.create_index(
         "uix_target_fields_erp_scope_field",
@@ -55,9 +59,9 @@ def upgrade() -> None:
         sa.Column("target_field_id", sa.String(255), nullable=True),
         sa.Column("target_field_label", sa.String(500), nullable=True),
         sa.Column("target_dtype", sa.String(50), nullable=True),
-        sa.Column("status", sa.String(30), nullable=False, server_default="no_safe_target"),
+        sa.Column("status", sa.String(30), nullable=False, server_default=sa.text("'no_safe_target'")),
         sa.Column("confidence", sa.Float, nullable=True),
-        sa.Column("mapping_source", sa.String(10), nullable=False, server_default="ai"),
+        sa.Column("mapping_source", sa.String(10), nullable=False, server_default=sa.text("'ai'")),
         sa.Column("validation", sa.String(30), nullable=True),
         sa.Column("evidence", JSONB, nullable=True),
         sa.Column("confirmed_by", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
@@ -107,6 +111,14 @@ def upgrade() -> None:
         sa.Column("changed_by", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
         sa.Column("changed_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("reason", sa.Text, nullable=True),
+        sa.CheckConstraint(
+            "previous_status IS NULL OR previous_status IN ('suggested','review_required','confirmed','excluded','no_safe_target')",
+            name="ck_col_mapping_history_prev_status",
+        ),
+        sa.CheckConstraint(
+            "new_status IS NULL OR new_status IN ('suggested','review_required','confirmed','excluded','no_safe_target')",
+            name="ck_col_mapping_history_new_status",
+        ),
     )
     op.create_index("ix_col_mapping_history_mapping_id", "column_mapping_history", ["mapping_id"])
     op.create_index("ix_col_mapping_history_run_id", "column_mapping_history", ["run_id"])

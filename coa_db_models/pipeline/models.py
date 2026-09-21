@@ -202,7 +202,7 @@ class TargetField(Base):
     read_only: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     identifier: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     # source tracks where this record came from — drives replacement strategy
-    source: Mapped[str] = mapped_column(String(20), nullable=False, server_default="seed")
+    source: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'seed'"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -211,6 +211,10 @@ class TargetField(Base):
         CheckConstraint(
             f"source IN ({_VALID_TARGET_SOURCES})",
             name="ck_target_fields_source",
+        ),
+        CheckConstraint(
+            f"scope IN ({_VALID_SCOPES})",
+            name="ck_target_fields_scope",
         ),
         Index(
             "uix_target_fields_erp_scope_field",
@@ -249,9 +253,9 @@ class ColumnMapping(Base):
     target_field_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     target_field_label: Mapped[str | None] = mapped_column(String(500), nullable=True)
     target_dtype: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    status: Mapped[str] = mapped_column(String(30), nullable=False, server_default="no_safe_target")
+    status: Mapped[str] = mapped_column(String(30), nullable=False, server_default=text("'no_safe_target'"))
     confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
-    mapping_source: Mapped[str] = mapped_column(String(10), nullable=False, server_default="ai")
+    mapping_source: Mapped[str] = mapped_column(String(10), nullable=False, server_default=text("'ai'"))
     validation: Mapped[str | None] = mapped_column(String(30), nullable=True)
     # evidence: list of signal codes e.g. ['name', 'samples', 'datatype', 'prior']
     evidence: Mapped[list | None] = mapped_column(JSONB, nullable=True)
@@ -321,6 +325,14 @@ class ColumnMappingHistory(Base):
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     __table_args__ = (
+        CheckConstraint(
+            f"previous_status IS NULL OR previous_status IN ({_VALID_MAPPING_STATUSES})",
+            name="ck_col_mapping_history_prev_status",
+        ),
+        CheckConstraint(
+            f"new_status IS NULL OR new_status IN ({_VALID_MAPPING_STATUSES})",
+            name="ck_col_mapping_history_new_status",
+        ),
         Index("ix_col_mapping_history_mapping_id", "mapping_id"),
         Index("ix_col_mapping_history_run_id", "run_id"),
     )
@@ -374,6 +386,10 @@ class OrgMappingBookmark(Base):
         CheckConstraint(
             f"mapping_type IN ({_VALID_BOOKMARK_TYPES})",
             name="ck_org_mapping_bookmarks_type",
+        ),
+        CheckConstraint(
+            f"scope IN ({_VALID_SCOPES})",
+            name="ck_org_mapping_bookmarks_scope",
         ),
         UniqueConstraint("org_id", "erp_id", "scope", "source_field", "mapping_type", name="uix_org_mapping_bookmarks"),
         Index("ix_org_mapping_bookmarks_org_erp_scope_type", "org_id", "erp_id", "scope", "mapping_type"),

@@ -29,6 +29,10 @@ def upgrade() -> None:
         sa.Column("bookmarked_by", UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
         sa.Column("bookmarked_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.CheckConstraint("mapping_type IN ('column','value','format')", name="ck_org_mapping_bookmarks_type"),
+        sa.CheckConstraint(
+            "scope IN ('items','customers','vendors','locations','contacts','vehicles','equipment','fixed_assets')",
+            name="ck_org_mapping_bookmarks_scope",
+        ),
         sa.UniqueConstraint("org_id", "erp_id", "scope", "source_field", "mapping_type", name="uix_org_mapping_bookmarks"),
     )
     op.create_index(
