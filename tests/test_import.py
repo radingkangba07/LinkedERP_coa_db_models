@@ -18,6 +18,7 @@ from coa_db_models import (
     Workstream,
     WorkstreamStage,
     WorkstreamStatusLog,
+    OrgERPConnection,
 )
 from coa_db_models.workstreams.models import (
     WorkstreamCategory,
@@ -75,6 +76,22 @@ def test_workstream_tables_registered():
     assert Workstream.__tablename__ == "workstreams"
     assert WorkstreamStage.__tablename__ == "workstream_stages"
     assert WorkstreamStatusLog.__tablename__ == "workstream_status_logs"
+
+
+def test_mcp_connections_tables_registered():
+    table_names = set(Base.metadata.tables.keys())
+    assert "org_erp_connections" in table_names, "Missing table: org_erp_connections"
+
+
+def test_org_erp_connection_model():
+    assert OrgERPConnection.__tablename__ == "org_erp_connections"
+    cols = {c.name for c in OrgERPConnection.__table__.columns}
+    for col in ("id", "org_id", "label", "erp_id", "connection_role", "base_url",
+                "auth_strategy", "erp_config", "status", "consecutive_failures",
+                "version", "created_at", "updated_at"):
+        assert col in cols, f"OrgERPConnection missing column: {col}"
+    id_col = OrgERPConnection.__table__.c.id
+    assert id_col.server_default is not None, "OrgERPConnection.id must have a server_default"
 
 
 def test_dab16_column_additions():

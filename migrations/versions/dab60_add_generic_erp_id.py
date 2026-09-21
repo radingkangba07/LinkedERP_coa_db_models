@@ -16,7 +16,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_constraint("ck_org_erp_connections_erp_id", "org_erp_connections")
+    op.drop_constraint("ck_org_erp_connections_erp_id", "org_erp_connections", type_="check")
     op.create_check_constraint(
         "ck_org_erp_connections_erp_id",
         "org_erp_connections",
@@ -25,7 +25,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_constraint("ck_org_erp_connections_erp_id", "org_erp_connections")
+    op.drop_constraint("ck_org_erp_connections_erp_id", "org_erp_connections", type_="check")
     op.create_check_constraint(
         "ck_org_erp_connections_erp_id",
         "org_erp_connections",

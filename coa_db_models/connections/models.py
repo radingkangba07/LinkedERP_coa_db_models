@@ -22,7 +22,7 @@ from coa_db_models.base import Base
 class OrgERPConnection(Base):
     __tablename__ = "org_erp_connections"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     org_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
     label: Mapped[str] = mapped_column(String(200), nullable=False)
     erp_id: Mapped[str] = mapped_column(String(50), nullable=False)
