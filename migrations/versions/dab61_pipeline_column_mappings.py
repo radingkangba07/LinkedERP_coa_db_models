@@ -1,8 +1,7 @@
 """dab61: add missing CHECK constraints to column-mapping tables
 
 The target_fields, column_mappings, and column_mapping_history tables were
-created by dab58 (since removed from the repo). This migration adds the
-CHECK constraints that were omitted at that time:
+created by dab58. This migration adds the CHECK constraints omitted at that time:
   - ck_target_fields_scope     — prevents free-form scope strings on target_fields
   - ck_col_mapping_history_prev_status / ck_col_mapping_history_new_status
       — ensures the audit trail only records valid status values

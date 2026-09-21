@@ -7,6 +7,7 @@ from coa_db_models import (
     OrganizationInvitation,
     Project,
     ProjectAccess,
+    ProjectDisplayCode,
     Job,
     CoaMapping,
     CoaMappingSuggestion,
@@ -53,6 +54,7 @@ def test_all_tables_registered():
         "workstreams",
         "workstream_stages",
         "workstream_status_logs",
+        "project_display_codes",
         "target_fields",
         "column_mappings",
         "column_mapping_history",
@@ -126,9 +128,11 @@ def test_pipeline_column_mapping_tables_registered():
 
 
 def test_dab16_column_additions():
-    project_cols = {c.name for c in Project.__table__.columns}
-    for col in ("display_code", "display_code_org", "display_code_src", "display_code_tgt", "display_code_seq"):
-        assert col in project_cols, f"Project missing column: {col}"
+    # display codes live in their own table (project_display_codes), not inline on projects
+    assert ProjectDisplayCode.__tablename__ == "project_display_codes"
+    pdc_cols = {c.name for c in ProjectDisplayCode.__table__.columns}
+    for col in ("id", "project_id", "display_code", "org_part", "source_part", "target_part", "seq"):
+        assert col in pdc_cols, f"ProjectDisplayCode missing column: {col}"
 
     org_cols = {c.name for c in Organization.__table__.columns}
     assert "code" in org_cols, "Organization missing column: code"
