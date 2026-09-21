@@ -216,13 +216,9 @@ class TargetField(Base):
             f"scope IN ({_VALID_SCOPES})",
             name="ck_target_fields_scope",
         ),
-        Index(
-            "uix_target_fields_erp_scope_field",
-            "erp_id",
-            "scope",
-            "field_id",
-            unique=True,
-        ),
+        # dab58 created this as a named UniqueConstraint (not a unique Index).
+        # Use index_elements=[...] on ON CONFLICT — do NOT use constraint= here.
+        UniqueConstraint("erp_id", "scope", "field_id", name="uix_target_fields_erp_scope_field"),
         Index("ix_target_fields_erp_scope", "erp_id", "scope"),
     )
 
@@ -286,12 +282,8 @@ class ColumnMapping(Base):
             f"validation IS NULL OR validation IN ({_VALID_MAPPING_VALIDATIONS})",
             name="ck_column_mappings_validation",
         ),
-        Index(
-            "uix_column_mappings_run_field",
-            "run_id",
-            "source_field",
-            unique=True,
-        ),
+        # dab58 created this as a named UniqueConstraint (not a unique Index).
+        UniqueConstraint("run_id", "source_field", name="uix_column_mappings_run_field"),
         Index("ix_column_mappings_run_id", "run_id"),
         Index("ix_column_mappings_run_status", "run_id", "status"),
     )
