@@ -128,6 +128,7 @@ def test_pipeline_column_mapping_tables_registered():
 
 
 
+
 def test_dab16_column_additions():
     # display codes live in their own table (project_display_codes), not inline on projects
     assert ProjectDisplayCode.__tablename__ == "project_display_codes"
