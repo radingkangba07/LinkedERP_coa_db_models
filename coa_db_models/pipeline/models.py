@@ -171,3 +171,4 @@ class FieldProfile(Base):
         # Used by the "block navigation if any override pending" gate
         Index("ix_field_profiles_run_override_status", "run_id", "override_status"),
     )
+

@@ -1,4 +1,5 @@
 from coa_db_models.base import Base
+from coa_db_models.connections.models import OrgERPConnection
 from coa_db_models.pipeline.models import PipelineRun, FieldProfile
 from coa_db_models.auth.models import User, Organization, OrganizationMember, RefreshToken, OrganizationInvitation
 from coa_db_models.erp.models import ErpCompatibilityRule
@@ -33,4 +34,5 @@ __all__ = [
     "MasterDataEntity", "WorkstreamCategory", "Workstream", "WorkstreamStage", "WorkstreamStatusLog",
     "EntityPack", "FieldDecision",
     "PipelineRun", "FieldProfile",
+    "OrgERPConnection",
 ]
