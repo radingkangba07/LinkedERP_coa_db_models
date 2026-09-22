@@ -7,6 +7,7 @@ from coa_db_models import (
     OrganizationInvitation,
     Project,
     ProjectAccess,
+    ProjectDisplayCode,
     Job,
     CoaMapping,
     CoaMappingSuggestion,
@@ -19,6 +20,10 @@ from coa_db_models import (
     WorkstreamStage,
     WorkstreamStatusLog,
     OrgERPConnection,
+    TargetField,
+    ColumnMapping,
+    ColumnMappingHistory,
+    OrgMappingBookmark,
 )
 from coa_db_models.workstreams.models import (
     WorkstreamCategory,
@@ -49,6 +54,11 @@ def test_all_tables_registered():
         "workstreams",
         "workstream_stages",
         "workstream_status_logs",
+        "project_display_codes",
+        "target_fields",
+        "column_mappings",
+        "column_mapping_history",
+        "org_mapping_bookmarks",
     }
     assert expected.issubset(table_names), f"Missing tables: {expected - table_names}"
 
@@ -94,10 +104,35 @@ def test_org_erp_connection_model():
     assert id_col.server_default is not None, "OrgERPConnection.id must have a server_default"
 
 
+def test_pipeline_column_mapping_tables_registered():
+    assert TargetField.__tablename__ == "target_fields"
+    assert ColumnMapping.__tablename__ == "column_mappings"
+    assert ColumnMappingHistory.__tablename__ == "column_mapping_history"
+    assert OrgMappingBookmark.__tablename__ == "org_mapping_bookmarks"
+
+    tf_cols = {c.name for c in TargetField.__table__.columns}
+    for col in ("id", "erp_id", "scope", "field_id", "label", "dtype", "source", "created_at"):
+        assert col in tf_cols, f"TargetField missing column: {col}"
+
+    cm_cols = {c.name for c in ColumnMapping.__table__.columns}
+    for col in ("id", "run_id", "source_field", "status", "mapping_source", "updated_at"):
+        assert col in cm_cols, f"ColumnMapping missing column: {col}"
+
+    hist_cols = {c.name for c in ColumnMappingHistory.__table__.columns}
+    for col in ("id", "mapping_id", "run_id", "previous_status", "new_status", "changed_at"):
+        assert col in hist_cols, f"ColumnMappingHistory missing column: {col}"
+
+    bm_cols = {c.name for c in OrgMappingBookmark.__table__.columns}
+    for col in ("id", "org_id", "erp_id", "scope", "source_field", "mapping_type", "payload"):
+        assert col in bm_cols, f"OrgMappingBookmark missing column: {col}"
+
+
 def test_dab16_column_additions():
-    project_cols = {c.name for c in Project.__table__.columns}
-    for col in ("display_code", "display_code_org", "display_code_src", "display_code_tgt", "display_code_seq"):
-        assert col in project_cols, f"Project missing column: {col}"
+    # display codes live in their own table (project_display_codes), not inline on projects
+    assert ProjectDisplayCode.__tablename__ == "project_display_codes"
+    pdc_cols = {c.name for c in ProjectDisplayCode.__table__.columns}
+    for col in ("id", "project_id", "display_code", "org_part", "source_part", "target_part", "seq"):
+        assert col in pdc_cols, f"ProjectDisplayCode missing column: {col}"
 
     org_cols = {c.name for c in Organization.__table__.columns}
     assert "code" in org_cols, "Organization missing column: code"
