@@ -26,6 +26,7 @@ from coa_db_models import (
     OrgMappingBookmark,
     ValueMapping,
     ValueMappingHistory,
+    PipelineTestRun,
 )
 from coa_db_models.workstreams.models import (
     WorkstreamCategory,
@@ -63,6 +64,7 @@ def test_all_tables_registered():
         "org_mapping_bookmarks",
         "value_mappings",
         "value_mapping_history",
+        "pipeline_test_runs",
     }
     assert expected.issubset(table_names), f"Missing tables: {expected - table_names}"
 
@@ -200,3 +202,25 @@ def test_catalog_tables_registered_with_immutability_guards():
                                 "catalog_snapshots", "schema_models", "schema_fields", "account_discoveries",
                                 "catalog_scope_configurations", "conversion_scope_models",
                                 "migration_plan_bindings"}
+
+
+def test_pipeline_test_run_model():
+    assert PipelineTestRun.__tablename__ == "pipeline_test_runs"
+
+    cols = {c.name for c in PipelineTestRun.__table__.columns}
+    for col in (
+        "id", "run_id", "status", "triggered_by", "started_at", "completed_at",
+        "rows_attempted", "rows_passed", "rows_failed", "failure_summary",
+        "sample_failures", "error_detail", "created_at",
+    ):
+        assert col in cols, f"PipelineTestRun missing column: {col}"
+
+    constraint_names = {c.name for c in PipelineTestRun.__table__.constraints}
+    assert "ck_pipeline_test_runs_status" in constraint_names, (
+        "PipelineTestRun missing CHECK constraint: ck_pipeline_test_runs_status"
+    )
+
+    index_names = {i.name for i in PipelineTestRun.__table__.indexes}
+    assert "uix_pipeline_test_runs_run_active" in index_names, (
+        "PipelineTestRun missing partial unique index: uix_pipeline_test_runs_run_active"
+    )

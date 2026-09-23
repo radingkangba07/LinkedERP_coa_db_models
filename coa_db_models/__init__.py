@@ -9,6 +9,7 @@ from coa_db_models.pipeline.models import (
     OrgMappingBookmark,
     ValueMapping,
     ValueMappingHistory,
+    PipelineTestRun,
 )
 from coa_db_models.auth.models import User, Organization, OrganizationMember, RefreshToken, OrganizationInvitation
 from coa_db_models.erp.models import ErpCompatibilityRule
@@ -58,6 +59,7 @@ __all__ = [
     "PipelineRun", "FieldProfile",
     "TargetField", "ColumnMapping", "ColumnMappingHistory", "OrgMappingBookmark",
     "ValueMapping", "ValueMappingHistory",
+    "PipelineTestRun",
     "OrgERPConnection",
     "CatalogErpConfig", "CatalogFieldGroup", "CatalogScopeRoute",
     "CatalogSnapshot", "SchemaModel", "SchemaField", "AccountDiscovery",

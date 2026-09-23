@@ -348,6 +348,69 @@ class ColumnMappingHistory(Base):
 _VALID_BOOKMARK_TYPES = "'column','value','format'"
 
 
+# ---------------------------------------------------------------------------
+# Pipeline test run  (wizard step 7)
+# ---------------------------------------------------------------------------
+# Tracks a dry-run validation pass over the confirmed column mappings for a
+# given pipeline run.  One active test run per pipeline run at a time — the
+# partial unique index below prevents duplicates while status is in-flight.
+# Writers: test-import worker (status, rows_*, summaries); backend route
+# (triggered_by, initial 'pending' row).
+# ---------------------------------------------------------------------------
+
+_VALID_TEST_RUN_STATUSES = "'pending','running','complete','failed'"
+
+
+class PipelineTestRun(Base):
+    __tablename__ = "pipeline_test_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default=text("'pending'")
+    )
+    triggered_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    rows_attempted: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rows_passed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rows_failed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Field-level breakdown: {field_name: {rule: count}} for each failing rule.
+    failure_summary: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Up to 10 example failing rows with per-field reasons.
+    sample_failures: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            f"status IN ({_VALID_TEST_RUN_STATUSES})",
+            name="ck_pipeline_test_runs_status",
+        ),
+        # Prevent two active test runs for the same pipeline run simultaneously.
+        Index(
+            "uix_pipeline_test_runs_run_active",
+            "run_id",
+            unique=True,
+            postgresql_where=text("status IN ('pending', 'running')"),
+        ),
+        Index("ix_pipeline_test_runs_run_id", "run_id"),
+        Index("ix_pipeline_test_runs_status", "status"),
+    )
+
+
 class OrgMappingBookmark(Base):
     __tablename__ = "org_mapping_bookmarks"
 
