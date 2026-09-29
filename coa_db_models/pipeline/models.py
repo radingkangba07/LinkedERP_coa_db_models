@@ -360,11 +360,12 @@ _VALID_BOOKMARK_TYPES = "'column','value','format'"
 #   backend route      — triggered_by, initial 'pending' row
 # ---------------------------------------------------------------------------
 
-_VALID_IMPORT_RUN_STATUSES = "'pending','running','complete','failed'"
-_VALID_IMPORT_OUTCOMES     = "'imported','failed','skipped'"
-_VALID_IMPORT_RETRY_CLASS  = "'permanent','transient'"
-_VALID_IMPORT_PARSED_BY    = "'deterministic','ai'"
-_VALID_IMPORT_ERROR_STATUS = "'open','resolved'"
+_VALID_IMPORT_RUN_STATUSES     = "'pending','running','complete','failed'"
+_VALID_IMPORT_OUTCOMES         = "'imported','failed','skipped'"
+_VALID_IMPORT_RETRY_CLASS      = "'permanent','transient'"
+_VALID_IMPORT_PARSED_BY        = "'deterministic','ai'"
+_VALID_IMPORT_ERROR_STATUS     = "'open','resolved'"
+_VALID_CONNECTOR_OPERATIONS    = "'create','update','delete'"
 
 
 class ImportRun(Base):
@@ -451,6 +452,7 @@ class ImportRecord(Base):
             f"outcome IN ({_VALID_IMPORT_OUTCOMES})",
             name="ck_import_records_outcome",
         ),
+        UniqueConstraint("import_run_id", "source_row_index", name="uix_import_records_run_row"),
         Index("ix_import_records_import_run_id", "import_run_id"),
         Index("ix_import_records_batch_code", "import_run_id", "batch_code"),
         Index("ix_import_records_outcome", "import_run_id", "outcome"),
@@ -486,9 +488,13 @@ class ConnectorRequest(Base):
     )
 
     __table_args__ = (
+        CheckConstraint(
+            f"operation IN ({_VALID_CONNECTOR_OPERATIONS})",
+            name="ck_connector_requests_operation",
+        ),
+        UniqueConstraint("import_run_id", "request_code", name="uix_connector_requests_run_code"),
         Index("ix_connector_requests_import_run_id", "import_run_id"),
         Index("ix_connector_requests_batch_code", "import_run_id", "batch_code"),
-        UniqueConstraint("import_run_id", "request_code", name="uix_connector_requests_run_code"),
     )
 
 

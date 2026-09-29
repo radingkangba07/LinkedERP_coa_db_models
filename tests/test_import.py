@@ -26,13 +26,10 @@ from coa_db_models import (
     OrgMappingBookmark,
     ValueMapping,
     ValueMappingHistory,
-    PipelineTestRun,
-)
-from coa_db_models.workstreams.models import (
-    WorkstreamCategory,
-    Workstream,
-    WorkstreamStage,
-    WorkstreamStatusLog,
+    ImportRun,
+    ImportRecord,
+    ConnectorRequest,
+    ImportError,
 )
 
 
@@ -64,7 +61,10 @@ def test_all_tables_registered():
         "org_mapping_bookmarks",
         "value_mappings",
         "value_mapping_history",
-        "pipeline_test_runs",
+        "import_runs",
+        "import_records",
+        "connector_requests",
+        "import_errors",
     }
     assert expected.issubset(table_names), f"Missing tables: {expected - table_names}"
 
@@ -204,23 +204,88 @@ def test_catalog_tables_registered_with_immutability_guards():
                                 "migration_plan_bindings"}
 
 
-def test_pipeline_test_run_model():
-    assert PipelineTestRun.__tablename__ == "pipeline_test_runs"
+def test_import_run_model():
+    assert ImportRun.__tablename__ == "import_runs"
 
-    cols = {c.name for c in PipelineTestRun.__table__.columns}
+    cols = {c.name for c in ImportRun.__table__.columns}
     for col in (
-        "id", "run_id", "status", "triggered_by", "started_at", "completed_at",
-        "rows_attempted", "rows_passed", "rows_failed", "failure_summary",
-        "sample_failures", "error_detail", "created_at",
+        "id", "run_id", "triggered_by", "status", "run_code", "batch_size", "req_per_sec",
+        "rows_attempted", "rows_imported", "rows_failed", "rows_skipped", "rows_reconciled",
+        "duration_ms", "error_detail", "started_at", "completed_at", "created_at",
     ):
-        assert col in cols, f"PipelineTestRun missing column: {col}"
+        assert col in cols, f"ImportRun missing column: {col}"
 
-    constraint_names = {c.name for c in PipelineTestRun.__table__.constraints}
-    assert "ck_pipeline_test_runs_status" in constraint_names, (
-        "PipelineTestRun missing CHECK constraint: ck_pipeline_test_runs_status"
+    constraint_names = {c.name for c in ImportRun.__table__.constraints}
+    assert "ck_import_runs_status" in constraint_names, (
+        "ImportRun missing CHECK constraint: ck_import_runs_status"
     )
 
-    index_names = {i.name for i in PipelineTestRun.__table__.indexes}
-    assert "uix_pipeline_test_runs_run_active" in index_names, (
-        "PipelineTestRun missing partial unique index: uix_pipeline_test_runs_run_active"
+    index_names = {i.name for i in ImportRun.__table__.indexes}
+    assert "uix_import_runs_run_active" in index_names, (
+        "ImportRun missing partial unique index: uix_import_runs_run_active"
+    )
+
+
+def test_import_record_model():
+    assert ImportRecord.__tablename__ == "import_records"
+
+    cols = {c.name for c in ImportRecord.__table__.columns}
+    for col in (
+        "id", "import_run_id", "source_row_index", "internal_id", "display_name",
+        "batch_code", "outcome", "target_id", "latency_ms", "created_at",
+    ):
+        assert col in cols, f"ImportRecord missing column: {col}"
+
+    constraint_names = {c.name for c in ImportRecord.__table__.constraints}
+    assert "ck_import_records_outcome" in constraint_names, (
+        "ImportRecord missing CHECK constraint: ck_import_records_outcome"
+    )
+    assert "uix_import_records_run_row" in constraint_names, (
+        "ImportRecord missing UniqueConstraint on (import_run_id, source_row_index)"
+    )
+
+
+def test_connector_request_model():
+    assert ConnectorRequest.__tablename__ == "connector_requests"
+
+    cols = {c.name for c in ConnectorRequest.__table__.columns}
+    for col in (
+        "id", "import_run_id", "request_code", "operation", "erp_model",
+        "record_ref", "batch_code", "http_status", "latency_ms", "retries",
+        "request_payload", "response_payload", "created_at",
+    ):
+        assert col in cols, f"ConnectorRequest missing column: {col}"
+
+    constraint_names = {c.name for c in ConnectorRequest.__table__.constraints}
+    assert "uix_connector_requests_run_code" in constraint_names, (
+        "ConnectorRequest missing UniqueConstraint on (import_run_id, request_code)"
+    )
+    assert "ck_connector_requests_operation" in constraint_names, (
+        "ConnectorRequest missing CHECK constraint on operation"
+    )
+
+
+def test_import_error_model():
+    assert ImportError.__tablename__ == "import_errors"
+
+    cols = {c.name for c in ImportError.__table__.columns}
+    for col in (
+        "id", "import_run_id", "connector_request_id", "source_row_index",
+        "record_ref", "batch_code", "error_title", "error_detail",
+        "retry_class", "parsed_by", "status", "idempotency_key",
+        "source_field", "raw_value", "written_to", "value_sent", "erp_response",
+        "deterministic_rule", "ai_analysis", "ai_likely_cause", "ai_cause_category",
+        "ai_fix_suggestion", "ai_fix_step", "ai_model", "created_at",
+    ):
+        assert col in cols, f"ImportError missing column: {col}"
+
+    constraint_names = {c.name for c in ImportError.__table__.constraints}
+    assert "ck_import_errors_retry_class" in constraint_names, (
+        "ImportError missing CHECK constraint: ck_import_errors_retry_class"
+    )
+    assert "ck_import_errors_parsed_by" in constraint_names, (
+        "ImportError missing CHECK constraint: ck_import_errors_parsed_by"
+    )
+    assert "ck_import_errors_status" in constraint_names, (
+        "ImportError missing CHECK constraint: ck_import_errors_status"
     )

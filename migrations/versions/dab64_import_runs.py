@@ -78,6 +78,7 @@ def upgrade() -> None:
             "outcome IN ('imported','failed','skipped')",
             name="ck_import_records_outcome",
         ),
+        sa.UniqueConstraint("import_run_id", "source_row_index", name="uix_import_records_run_row"),
     )
     op.create_index("ix_import_records_import_run_id", "import_records", ["import_run_id"])
     op.create_index("ix_import_records_batch_code", "import_records", ["import_run_id", "batch_code"])
@@ -100,6 +101,10 @@ def upgrade() -> None:
         sa.Column("response_payload", JSONB, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.UniqueConstraint("import_run_id", "request_code", name="uix_connector_requests_run_code"),
+        sa.CheckConstraint(
+            "operation IN ('create','update','delete')",
+            name="ck_connector_requests_operation",
+        ),
     )
     op.create_index("ix_connector_requests_import_run_id", "connector_requests", ["import_run_id"])
     op.create_index("ix_connector_requests_batch_code", "connector_requests", ["import_run_id", "batch_code"])
@@ -151,9 +156,22 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_index("ix_import_errors_status", table_name="import_errors")
+    op.drop_index("ix_import_errors_batch_code", table_name="import_errors")
+    op.drop_index("ix_import_errors_import_run_id", table_name="import_errors")
     op.drop_table("import_errors")
+
+    op.drop_index("ix_connector_requests_batch_code", table_name="connector_requests")
+    op.drop_index("ix_connector_requests_import_run_id", table_name="connector_requests")
+    op.drop_constraint("uix_connector_requests_run_code", "connector_requests", type_="unique")
     op.drop_table("connector_requests")
+
+    op.drop_index("ix_import_records_outcome", table_name="import_records")
+    op.drop_index("ix_import_records_batch_code", table_name="import_records")
+    op.drop_index("ix_import_records_import_run_id", table_name="import_records")
+    op.drop_constraint("uix_import_records_run_row", "import_records", type_="unique")
     op.drop_table("import_records")
+
     op.drop_index("uix_import_runs_run_active", table_name="import_runs")
     op.drop_index("ix_import_runs_status", table_name="import_runs")
     op.drop_index("ix_import_runs_run_id", table_name="import_runs")
