@@ -1,7 +1,7 @@
 """add value_mappings and value_mapping_history tables
 
-Revision ID: dab60
-Revises: dab59
+Revision ID: dab63
+Revises: dab62
 Create Date: 2026-09-15
 """
 
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision = "dab60"
-down_revision = "dab59"
+revision = "dab63"
+down_revision = "dab62"
 branch_labels = None
 depends_on = None
 
