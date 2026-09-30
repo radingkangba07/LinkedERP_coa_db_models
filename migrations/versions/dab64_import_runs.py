@@ -26,6 +26,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Guard: tables may already exist on environments where they were created
+    # outside alembic (demo / dev runs on earlier branches). Skip cleanly.
+    bind = op.get_bind()
+    if sa.inspect(bind).has_table("import_runs"):
+        return
+
     # ── import_runs ──────────────────────────────────────────────────────────
     op.create_table(
         "import_runs",
@@ -156,6 +162,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    bind = op.get_bind()
+    if not sa.inspect(bind).has_table("import_runs"):
+        return
     op.drop_index("ix_import_errors_status", table_name="import_errors")
     op.drop_index("ix_import_errors_batch_code", table_name="import_errors")
     op.drop_index("ix_import_errors_import_run_id", table_name="import_errors")

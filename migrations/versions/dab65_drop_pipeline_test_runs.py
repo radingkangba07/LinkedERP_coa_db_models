@@ -20,6 +20,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Guard: pipeline_test_runs may never have existed on this environment
+    # (it was created and immediately superseded by import_runs on some branches).
+    bind = op.get_bind()
+    if not sa.inspect(bind).has_table("pipeline_test_runs"):
+        return
+
     op.drop_index("uix_pipeline_test_runs_run_active", table_name="pipeline_test_runs")
     op.drop_index("ix_pipeline_test_runs_status", table_name="pipeline_test_runs")
     op.drop_index("ix_pipeline_test_runs_run_id", table_name="pipeline_test_runs")
