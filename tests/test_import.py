@@ -211,7 +211,7 @@ def test_import_run_model():
     for col in (
         "id", "run_id", "triggered_by", "status", "run_code", "batch_size", "req_per_sec",
         "rows_attempted", "rows_imported", "rows_failed", "rows_skipped", "rows_reconciled",
-        "duration_ms", "error_detail", "started_at", "completed_at", "created_at",
+        "duration_ms", "error_detail", "started_at", "completed_at", "updated_at", "created_at",
     ):
         assert col in cols, f"ImportRun missing column: {col}"
 
@@ -224,6 +224,9 @@ def test_import_run_model():
     assert "uix_import_runs_run_active" in index_names, (
         "ImportRun missing partial unique index: uix_import_runs_run_active"
     )
+
+    updated_at_col = ImportRun.__table__.c.updated_at
+    assert updated_at_col.server_default is not None, "ImportRun.updated_at must have a server_default"
 
 
 def test_import_record_model():
@@ -288,4 +291,17 @@ def test_import_error_model():
     )
     assert "ck_import_errors_status" in constraint_names, (
         "ImportError missing CHECK constraint: ck_import_errors_status"
+    )
+
+    index_names = {i.name for i in ImportError.__table__.indexes}
+    assert "ix_import_errors_run_row" in index_names, (
+        "ImportError missing index on (import_run_id, source_row_index)"
+    )
+    assert "uix_import_errors_idempotency" in index_names, (
+        "ImportError missing partial unique index on (import_run_id, idempotency_key)"
+    )
+    idempotency_idx = next(i for i in ImportError.__table__.indexes if i.name == "uix_import_errors_idempotency")
+    assert idempotency_idx.unique, "uix_import_errors_idempotency must be unique"
+    assert "postgresql_where" in idempotency_idx.kwargs, (
+        "uix_import_errors_idempotency must be a partial index (WHERE idempotency_key IS NOT NULL)"
     )

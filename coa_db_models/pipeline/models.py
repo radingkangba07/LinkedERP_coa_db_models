@@ -401,6 +401,10 @@ class ImportRun(Base):
     error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # updated_at enables stale-run detection: status='running' AND updated_at < now()-interval '30m'
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -481,6 +485,7 @@ class ConnectorRequest(Base):
     http_status: Mapped[int | None] = mapped_column(Integer, nullable=True)
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     retries: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    # Service layer must cap payload size before writing — ERP responses can be very large.
     request_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     response_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -564,6 +569,16 @@ class ImportError(Base):
         Index("ix_import_errors_import_run_id", "import_run_id"),
         Index("ix_import_errors_batch_code", "import_run_id", "batch_code"),
         Index("ix_import_errors_status", "import_run_id", "status"),
+        # Per-row error lookup (UI: "show errors for row N").
+        Index("ix_import_errors_run_row", "import_run_id", "source_row_index"),
+        # Deduplication: one error per idempotency key per run (NULLs excluded).
+        Index(
+            "uix_import_errors_idempotency",
+            "import_run_id",
+            "idempotency_key",
+            unique=True,
+            postgresql_where=text("idempotency_key IS NOT NULL"),
+        ),
     )
 
 
