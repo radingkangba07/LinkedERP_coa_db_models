@@ -120,12 +120,20 @@ def upgrade() -> None:
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
             sa.UniqueConstraint("import_run_id", "request_code", name="uix_connector_requests_run_code"),
             sa.CheckConstraint(
-                "operation IN ('create','update','delete')",
+                "operation IN ('create','update','delete','validate')",
                 name="ck_connector_requests_operation",
             ),
         )
         op.create_index("ix_connector_requests_import_run_id", "connector_requests", ["import_run_id"])
         op.create_index("ix_connector_requests_batch_code", "connector_requests", ["import_run_id", "batch_code"])
+    else:
+        # Backfill: widen the operation CHECK constraint to include 'validate' on pre-existing tables.
+        op.drop_constraint("ck_connector_requests_operation", "connector_requests", type_="check")
+        op.create_check_constraint(
+            "ck_connector_requests_operation",
+            "connector_requests",
+            "operation IN ('create','update','delete','validate')",
+        )
 
     # ── import_errors ────────────────────────────────────────────────────────
     if not inspector.has_table("import_errors"):

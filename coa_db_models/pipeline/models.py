@@ -365,7 +365,7 @@ _VALID_IMPORT_OUTCOMES         = "'imported','failed','skipped'"
 _VALID_IMPORT_RETRY_CLASS      = "'permanent','transient'"
 _VALID_IMPORT_PARSED_BY        = "'deterministic','ai'"
 _VALID_IMPORT_ERROR_STATUS     = "'open','resolved'"
-_VALID_CONNECTOR_OPERATIONS    = "'create','update','delete'"
+_VALID_CONNECTOR_OPERATIONS    = "'create','update','delete','validate'"
 
 
 class ImportRun(Base):
