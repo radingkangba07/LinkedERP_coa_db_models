@@ -176,6 +176,22 @@ def _fail(session: Session, snapshot_id: Any, message: str, problems: list[str] 
     session.commit()
 
 
+def baseline_identity(graph_snapshot_id: str) -> str:
+    return projection.canonical_hash({
+        "kind": "baseline",
+        "catalog_contract": projection.CATALOG_CONTRACT_VERSION,
+        "graph_snapshot_id": graph_snapshot_id,
+    })
+
+
+def baseline_loaded(session: Session, graph_snapshot_id: str) -> bool:
+    """True when this graph snapshot is already a validated or published baseline (a load would write nothing)."""
+    status = session.execute(
+        select(CatalogSnapshot.status).where(CatalogSnapshot.identity_sha256 == baseline_identity(graph_snapshot_id))
+    ).scalars().all()
+    return any(s in ("validated", "published") for s in status)
+
+
 def load_baseline(session: Session, store: Path, graph_snapshot_id: str, source: str = "csv") -> dict[str, Any]:
     """Load one global graph snapshot as a shared (org_id NULL) published baseline."""
     started = time.monotonic()
@@ -196,11 +212,7 @@ def load_baseline(session: Session, store: Path, graph_snapshot_id: str, source:
         raise LoaderError(f"ERP {erp!r} has no active catalogue configuration; run seed-erp-config first")
     prefixes = dict(cfg.custom_prefixes or {})
 
-    identity = projection.canonical_hash({
-        "kind": "baseline",
-        "catalog_contract": projection.CATALOG_CONTRACT_VERSION,
-        "graph_snapshot_id": graph_snapshot_id,
-    })
+    identity = baseline_identity(graph_snapshot_id)
     row = session.execute(
         select(CatalogSnapshot).where(CatalogSnapshot.identity_sha256 == identity, CatalogSnapshot.status != "failed")
     ).scalar_one_or_none()

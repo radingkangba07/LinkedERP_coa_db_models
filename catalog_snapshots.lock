@@ -1,0 +1,139 @@
+{
+  "prefix": "catalog-snapshots",
+  "snapshots": {
+    "netsuite-2025.2-04a4c4733a79fc301a52": {
+      "annotations.csv.gz": {
+        "bytes": 44862,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/annotations.csv.gz",
+        "sha256": "318560d72046c54dd44f9ce16659bbaa1e6871d9dc35a670453c0682003d4766"
+      },
+      "bindings.csv.gz": {
+        "bytes": 407280,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/bindings.csv.gz",
+        "sha256": "83af5210cbc498e7e83dbc965e821dbf6cc5ee1430ba9b6ccdfccef9fe06c1e0"
+      },
+      "completeness.json.gz": {
+        "bytes": 1871,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/completeness.json.gz",
+        "sha256": "1e8b691fa3a4547bd201008300fb272c865a6e0dcc8974364d2251dd5f10b0de"
+      },
+      "constraints.csv.gz": {
+        "bytes": 99,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/constraints.csv.gz",
+        "sha256": "e292e805b2f16bdd07869dae0cfa3081612ae9907ff9a0b344a0b49df49d5178"
+      },
+      "diagnostics.json.gz": {
+        "bytes": 139,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/diagnostics.json.gz",
+        "sha256": "a0cbe89b3797679bf8c157dffa60dfde6da4ea43165b3190395d56e0abccc102"
+      },
+      "edges.csv.gz": {
+        "bytes": 283416,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/edges.csv.gz",
+        "sha256": "2cdd5eaa3be8458c5358bce1b9208e89390b7e593241b639e79f395d35d3954b"
+      },
+      "field_origin.csv.gz": {
+        "bytes": 79,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/field_origin.csv.gz",
+        "sha256": "ac1238c793c727fac6d6257c61b60030eb44c2cf232e151fc4353ad89aa92339"
+      },
+      "fields.csv.gz": {
+        "bytes": 1131587,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/fields.csv.gz",
+        "sha256": "23966d1270f2ad047fa414f5edf2e73ca62e04277249e3a72190326e4feec516"
+      },
+      "manifest.json.gz": {
+        "bytes": 3160,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/manifest.json.gz",
+        "sha256": "91894571db3b93a3ad62a5f9274db26b36cb9e889503a7b35a7dc35a97abdf87"
+      },
+      "model_links.csv.gz": {
+        "bytes": 4791,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/model_links.csv.gz",
+        "sha256": "262ea9167dfc0ece5066d591fc11f3eb8f8f081813972e69dd0912b49a79600f"
+      },
+      "models.csv.gz": {
+        "bytes": 13607,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/models.csv.gz",
+        "sha256": "9ac4bac6f708ffd4613ef45a200e2da955634fc332c515aa17731220ce20bcde"
+      },
+      "properties.csv.gz": {
+        "bytes": 1413781,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/properties.csv.gz",
+        "sha256": "f1d2f6f4e0bfc521862db3dae199c1a0db1ebac39346e7d32118563639cda0d9"
+      },
+      "tables.json.gz": {
+        "bytes": 975,
+        "key": "catalog-snapshots/netsuite-2025.2-04a4c4733a79fc301a52/tables.json.gz",
+        "sha256": "f089659b43310f3e5f46440344fbb2dde74ff26764115048cf87bca67e69f2cc"
+      }
+    },
+    "odoo-18.0-3c92dbec93d9b412af1c": {
+      "annotations.csv.gz": {
+        "bytes": 115947,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/annotations.csv.gz",
+        "sha256": "c1f9c9fe119c26b94ea891731a89d5ef9d17273d862dba61b5fb117b0d83bd5c"
+      },
+      "bindings.csv.gz": {
+        "bytes": 564103,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/bindings.csv.gz",
+        "sha256": "da8fd2de8675539bd0edd1f9944fab4e31c352186383b5c3a147f1659e98d743"
+      },
+      "completeness.json.gz": {
+        "bytes": 2160,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/completeness.json.gz",
+        "sha256": "4c4163ec9011bdd34f29c2bb692950fa4ba66da72a5d12af22548f54e8e1069c"
+      },
+      "constraints.csv.gz": {
+        "bytes": 9073,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/constraints.csv.gz",
+        "sha256": "82b5f4db01f736fc874e6adf518e245d813fd543845d9a1eb2d41e0e96a74c4b"
+      },
+      "diagnostics.json.gz": {
+        "bytes": 748,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/diagnostics.json.gz",
+        "sha256": "fb4f9652261b39097498b2a81b88d92f7183eae4a0eaa4ae6728c1cab3da0c7f"
+      },
+      "edges.csv.gz": {
+        "bytes": 660727,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/edges.csv.gz",
+        "sha256": "4b01263ed0b070a6b4a003b0bf2ea2dd9ea6d712182fba8b99b92ab79dca5e46"
+      },
+      "field_origin.csv.gz": {
+        "bytes": 143938,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/field_origin.csv.gz",
+        "sha256": "30f6490674ddc7a0540b45bab591c52bc8bcf82027da956caa9e6edb9fcb6ff5"
+      },
+      "fields.csv.gz": {
+        "bytes": 994442,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/fields.csv.gz",
+        "sha256": "b9e1e9c0951868e131722b46a86d6f6b835da9ea7bd3f5bfa96f3f3388f6ecdb"
+      },
+      "manifest.json.gz": {
+        "bytes": 3133,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/manifest.json.gz",
+        "sha256": "629042abe64320c78548e12b85755718733a9d6a12a2f1b552513dd4edcff020"
+      },
+      "model_links.csv.gz": {
+        "bytes": 25086,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/model_links.csv.gz",
+        "sha256": "91c5ce54935f78ad04987c62e3a179bd0fe1d203a8aa7188b52c4d2c38768d94"
+      },
+      "models.csv.gz": {
+        "bytes": 39703,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/models.csv.gz",
+        "sha256": "ec3be54afd0575b3c001d75f8487f732cf0a8957d4531f2e2faecf845e467fdf"
+      },
+      "properties.csv.gz": {
+        "bytes": 2836664,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/properties.csv.gz",
+        "sha256": "76a40e444073c638ab04ae660548131dd2374b9708e3c77857bf22195d83aac6"
+      },
+      "tables.json.gz": {
+        "bytes": 975,
+        "key": "catalog-snapshots/odoo-18.0-3c92dbec93d9b412af1c/tables.json.gz",
+        "sha256": "f089659b43310f3e5f46440344fbb2dde74ff26764115048cf87bca67e69f2cc"
+      }
+    }
+  }
+}
