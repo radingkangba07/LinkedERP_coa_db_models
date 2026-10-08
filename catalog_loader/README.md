@@ -24,33 +24,57 @@ uv sync --group loader
 
 ## 2. Order of operations (per environment)
 
-1. Migrate the database:
-   ```bash
-   DATABASE_URL=<url> uv run alembic upgrade head
-   ```
-2. Seed each ERP configuration:
-   ```bash
-   uv run python -m catalog_loader seed-erp-config --database-url <url> seed/erp_configs/odoo.json
-   uv run python -m catalog_loader seed-erp-config --database-url <url> seed/erp_configs/netsuite.json
-   ```
-3. Load each baseline:
-   ```bash
-   uv run python -m catalog_loader load-baseline --database-url <url> \
-       --store /path/to/artifacts --snapshot odoo-18.0-3c92dbec93d9b412af1c
-   uv run python -m catalog_loader load-baseline --database-url <url> \
-       --store /path/to/artifacts --snapshot netsuite-2025.2-04a4c4733a79fc301a52
-   ```
+Deploys run both steps automatically (`.github/workflows/ci-deploy-*.yml`), after the migrations:
 
-## 3. Command behaviour
+```bash
+DATABASE_URL=<url> uv run alembic upgrade head
+DATABASE_URL=<url> uv run python -m catalog_loader sync
+```
 
-### 3.1 `seed-erp-config`
+`sync` seeds every file in `seed/erp_configs/`, then loads each snapshot in `catalog_snapshots.lock` that is not
+yet loaded. It downloads from R2 (any S3-compatible store) using these variables in the environment's `.env` file:
+
+| Variable | Value |
+|---|---|
+| `CATALOG_S3_ENDPOINT` | `https://<account_id>.r2.cloudflarestorage.com` |
+| `CATALOG_S3_ACCESS_KEY` | R2 API token access key ID (read-only is enough) |
+| `CATALOG_S3_SECRET_KEY` | R2 API token secret |
+| `CATALOG_S3_BUCKET` | Bucket name |
+| `CATALOG_S3_REGION` | `auto` (default) |
+
+Snapshots already loaded are skipped without downloading. `--source-dir DIR` reads staged files from a local
+directory instead of R2.
+
+The individual commands remain available: `seed-erp-config FILE` and
+`load-baseline --store DIR --snapshot ID` against an unpacked snapshot directory.
+
+## 3. Adding a snapshot (for example Odoo 18.0 Enterprise)
+
+1. Build it in `erp_schema_graph`; it appears under `artifacts/snapshots/<id>/`.
+2. Stage it. This writes `staged/catalog-snapshots/<id>/*.gz` and adds its entry to `catalog_snapshots.lock`:
+   ```bash
+   uv run python -m catalog_loader stage /path/to/erp_schema_graph/artifacts/snapshots/<id>
+   ```
+3. Upload the staged files:
+   ```bash
+   aws s3 sync staged/catalog-snapshots "s3://<bucket>/catalog-snapshots" \
+     --endpoint-url https://<account_id>.r2.cloudflarestorage.com --content-type application/gzip
+   ```
+4. Commit `catalog_snapshots.lock` in a pull request. The next deploy of each environment loads only the new snapshot.
+
+If `erp_schema_graph` changed the CSV format, `stage` fails because the headers no longer match
+`catalog_loader/graph/`. Copy the new reader files into `catalog_loader/graph/` in the same pull request.
+
+## 4. Command behaviour
+
+### 4.1 `seed-erp-config`
 
 - **Validation:** the ERP id format, the scopes, the roles, that every referenced field group exists, and that no route is duplicated.
 - **Write:** in one transaction, it creates version N+1 with its field groups and scope routes, retires the active version and activates the new one.
 - **Repeats:** if the active version already has the same content, nothing changes. Notes do not count as content.
 - **Purpose:** the JSON files in `seed/erp_configs/` are bootstrap data only. Later changes are made as new versions through the backend, not by editing these files.
 
-### 3.2 `load-baseline`
+### 4.2 `load-baseline`
 
 **Input.** By default (`--source csv`) the loader reads the snapshot's relational CSV tables
 (`models.csv`, `fields.csv`, `edges.csv`, `bindings.csv`, `properties.csv`, `annotations.csv`,
@@ -71,14 +95,14 @@ same rows.
 
 The loader does not build scope configurations. The backend builds them per snapshot from the active ERP configuration when they are first needed.
 
-## 4. Reference timings (local, catalog_demo2)
+## 5. Reference timings (local, catalog_demo2)
 
 | Snapshot | Models | Fields | First load | Repeat |
 |---|---|---|---|---|
 | odoo-18.0-3c92dbec93d9b412af1c | 1,339 | 27,367 | 20 s | 0.5 s |
 | netsuite-2025.2-04a4c4733a79fc301a52 | 572 | 21,075 | 10 s | 0.4 s |
 
-## 5. Tests
+## 6. Tests
 
 ```bash
 uv run pytest -q tests

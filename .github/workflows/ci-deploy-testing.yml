@@ -120,4 +120,14 @@ jobs:
               ghcr.io/astral-sh/uv:python3.13-alpine \
               sh -c "uv sync --dev && uv run alembic upgrade head"
 
+            # Load the catalogue snapshots pinned in catalog_snapshots.lock (CATALOG_S3_* in the env file).
+            # Snapshots already loaded are skipped without downloading.
+            docker run --rm \
+              --network coa-testing_coa-testing \
+              -v "${DB_MODELS_DIR}:/app" \
+              -w /app \
+              --env-file "${ENV_DIR}/.env.testing" \
+              ghcr.io/astral-sh/uv:python3.13-alpine \
+              sh -c "uv sync --dev && uv run python -m catalog_loader sync"
+
             echo "Migrations applied successfully."
