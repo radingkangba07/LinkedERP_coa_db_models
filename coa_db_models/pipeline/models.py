@@ -386,3 +386,152 @@ class OrgMappingBookmark(Base):
         UniqueConstraint("org_id", "erp_id", "scope", "source_field", "mapping_type", name="uix_org_mapping_bookmarks"),
         Index("ix_org_mapping_bookmarks_org_erp_scope_type", "org_id", "erp_id", "scope", "mapping_type"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Value mappings  (wizard step 4)
+# ---------------------------------------------------------------------------
+# One row per (run, source_field, source_value).
+# Serves both the "Allowed Values" tab (Selection/Boolean target fields) and
+# the "Related Records" tab (Many2one/Many2many).
+# mapping_subtype is set by the ML service when posting proposals and drives
+# which UI tab a row appears on.
+# ---------------------------------------------------------------------------
+
+_VALID_VALUE_TRANSFORMATION_TYPES = (
+    "'replace','replace_preserve','apply_default','normalise','no_legal_target'"
+)
+_VALID_VALUE_EVIDENCE_TYPES = (
+    "'exact_match','alias','coa_mapping','no_match','no_coa_entry','no_legal_target'"
+)
+_VALID_VALUE_STATUSES = "'suggested','unresolved','confirmed','blocked','excluded'"
+_VALID_VALUE_MAPPING_SOURCES = "'ai','user','bookmark','coa_mapping'"
+_VALID_VALUE_MAPPING_SUBTYPES = "'allowed_value','related_record'"
+
+
+class ValueMapping(Base):
+    __tablename__ = "value_mappings"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("pipeline_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    source_field: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_value: Mapped[str] = mapped_column(Text, nullable=False)
+    # Drives which tab this row appears on in the UI.
+    mapping_subtype: Mapped[str] = mapped_column(String(20), nullable=False)
+    records_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    records_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # For Allowed Values tab: the crosswalked string value.
+    # For Related Records tab: the display name of the resolved record.
+    target_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Populated only for Related Records (Many2one/Many2many target fields).
+    target_record_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    transformation_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    evidence_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    evidence_source: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="unresolved")
+    mapping_source: Mapped[str] = mapped_column(String(20), nullable=False, server_default="ai")
+    confirmed_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            f"mapping_subtype IN ({_VALID_VALUE_MAPPING_SUBTYPES})",
+            name="ck_value_mappings_mapping_subtype",
+        ),
+        CheckConstraint(
+            f"transformation_type IN ({_VALID_VALUE_TRANSFORMATION_TYPES})",
+            name="ck_value_mappings_transformation_type",
+        ),
+        CheckConstraint(
+            f"evidence_type IS NULL OR evidence_type IN ({_VALID_VALUE_EVIDENCE_TYPES})",
+            name="ck_value_mappings_evidence_type",
+        ),
+        CheckConstraint(
+            f"status IN ({_VALID_VALUE_STATUSES})",
+            name="ck_value_mappings_status",
+        ),
+        CheckConstraint(
+            f"mapping_source IN ({_VALID_VALUE_MAPPING_SOURCES})",
+            name="ck_value_mappings_mapping_source",
+        ),
+        # The database enforces uniqueness via md5(source_value) to avoid the PostgreSQL
+        # B-tree entry byte limit. Upserts must use:
+        #   index_elements=["run_id", "source_field", func.md5(ValueMapping.source_value)]
+        # Do NOT use constraint="uix_value_mappings_run_field_value" — PostgreSQL will reject
+        # it because there is no UniqueConstraint, only a unique Index on the md5 expression.
+        Index(
+            "uix_value_mappings_run_field_value",
+            "run_id",
+            "source_field",
+            text("md5(source_value)"),
+            unique=True,
+        ),
+        Index("ix_value_mappings_run_id", "run_id"),
+        Index("ix_value_mappings_run_field", "run_id", "source_field"),
+        Index("ix_value_mappings_run_status", "run_id", "status"),
+        Index("ix_value_mappings_run_subtype", "run_id", "mapping_subtype"),
+    )
+
+
+class ValueMappingHistory(Base):
+    __tablename__ = "value_mapping_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid()
+    )
+    mapping_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("value_mappings.id", ondelete="CASCADE"), nullable=False
+    )
+    # Denormalised for direct querying without joining to value_mappings.
+    run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    changed_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    changed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    previous_transformation_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    new_transformation_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    previous_target_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_target_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    previous_target_record_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    new_target_record_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    previous_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    new_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    previous_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            f"previous_status IS NULL OR previous_status IN ({_VALID_VALUE_STATUSES})",
+            name="ck_value_mapping_history_prev_status",
+        ),
+        CheckConstraint(
+            f"new_status IS NULL OR new_status IN ({_VALID_VALUE_STATUSES})",
+            name="ck_value_mapping_history_new_status",
+        ),
+        CheckConstraint(
+            f"previous_transformation_type IS NULL OR previous_transformation_type IN ({_VALID_VALUE_TRANSFORMATION_TYPES})",
+            name="ck_value_mapping_history_prev_transformation_type",
+        ),
+        CheckConstraint(
+            f"new_transformation_type IS NULL OR new_transformation_type IN ({_VALID_VALUE_TRANSFORMATION_TYPES})",
+            name="ck_value_mapping_history_new_transformation_type",
+        ),
+        Index("ix_value_mapping_history_mapping_id", "mapping_id"),
+        Index("ix_value_mapping_history_run_id", "run_id"),
+    )

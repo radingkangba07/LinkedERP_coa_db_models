@@ -24,6 +24,8 @@ from coa_db_models import (
     ColumnMapping,
     ColumnMappingHistory,
     OrgMappingBookmark,
+    ValueMapping,
+    ValueMappingHistory,
 )
 from coa_db_models.workstreams.models import (
     WorkstreamCategory,
@@ -59,6 +61,8 @@ def test_all_tables_registered():
         "column_mappings",
         "column_mapping_history",
         "org_mapping_bookmarks",
+        "value_mappings",
+        "value_mapping_history",
     }
     assert expected.issubset(table_names), f"Missing tables: {expected - table_names}"
 
@@ -104,6 +108,34 @@ def test_org_erp_connection_model():
     assert id_col.server_default is not None, "OrgERPConnection.id must have a server_default"
 
 
+def test_value_mapping_tables_registered():
+    assert ValueMapping.__tablename__ == "value_mappings"
+    assert ValueMappingHistory.__tablename__ == "value_mapping_history"
+
+    vm_cols = {c.name for c in ValueMapping.__table__.columns}
+    for col in (
+        "id", "run_id", "source_field", "source_value", "mapping_subtype",
+        "transformation_type", "status", "mapping_source", "updated_at",
+    ):
+        assert col in vm_cols, f"ValueMapping missing column: {col}"
+
+    id_col = ValueMapping.__table__.c.id
+    assert id_col.server_default is not None, "ValueMapping.id must have a server_default"
+
+    vm_indexes = {i.name for i in ValueMapping.__table__.indexes}
+    assert "uix_value_mappings_run_field_value" in vm_indexes, \
+        "ValueMapping missing unique index uix_value_mappings_run_field_value"
+
+    hist_cols = {c.name for c in ValueMappingHistory.__table__.columns}
+    for col in (
+        "id", "mapping_id", "run_id", "changed_by", "changed_at",
+        "previous_status", "new_status",
+        "previous_transformation_type", "new_transformation_type",
+        "previous_notes", "new_notes", "reason",
+    ):
+        assert col in hist_cols, f"ValueMappingHistory missing column: {col}"
+
+
 def test_pipeline_column_mapping_tables_registered():
     assert TargetField.__tablename__ == "target_fields"
     assert ColumnMapping.__tablename__ == "column_mappings"
@@ -125,6 +157,8 @@ def test_pipeline_column_mapping_tables_registered():
     bm_cols = {c.name for c in OrgMappingBookmark.__table__.columns}
     for col in ("id", "org_id", "erp_id", "scope", "source_field", "mapping_type", "payload"):
         assert col in bm_cols, f"OrgMappingBookmark missing column: {col}"
+
+
 
 
 def test_dab16_column_additions():
