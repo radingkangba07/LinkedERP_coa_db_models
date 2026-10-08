@@ -36,11 +36,11 @@ yet loaded. It downloads from R2 (any S3-compatible store) using these variables
 
 | Variable | Value |
 |---|---|
-| `CATALOG_S3_ENDPOINT` | `https://<account_id>.r2.cloudflarestorage.com` |
-| `CATALOG_S3_ACCESS_KEY` | R2 API token access key ID (read-only is enough) |
-| `CATALOG_S3_SECRET_KEY` | R2 API token secret |
-| `CATALOG_S3_BUCKET` | Bucket name |
-| `CATALOG_S3_REGION` | `auto` (default) |
+| `S3_ENDPOINT` | `https://<account_id>.r2.cloudflarestorage.com` |
+| `S3_ACCESS_KEY` | R2 API token access key ID |
+| `S3_SECRET_KEY` | R2 API token secret |
+| `S3_BUCKET` | Bucket name |
+| `S3_REGION` | `auto` (default) |
 
 Snapshots already loaded are skipped without downloading. `--source-dir DIR` reads staged files from a local
 directory instead of R2.

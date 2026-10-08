@@ -67,7 +67,7 @@ Requires `DATABASE_URL` in `.env` or environment. Skips if data already exists.
 
 `catalog_loader/` loads the static ERP catalogue (Odoo, NetSuite schema snapshots) into the catalogue tables
 created by migration `dab63`. Deploys run `uv run python -m catalog_loader sync` after `alembic upgrade head`; it
-needs the `CATALOG_S3_*` variables. See [catalog_loader/README.md](catalog_loader/README.md).
+needs the `S3_*` variables. See [catalog_loader/README.md](catalog_loader/README.md).
 
 ## Updating consuming repos (backend, ML, etc.)
 
