@@ -51,14 +51,15 @@ The individual commands remain available: `seed-erp-config FILE` and
 ## 3. Adding a snapshot (for example Odoo 18.0 Enterprise)
 
 1. Build it in `erp_schema_graph`; it appears under `artifacts/snapshots/<id>/`.
-2. Stage it. This writes `staged/catalog-snapshots/<id>/*.gz` and adds its entry to `catalog_snapshots.lock`:
+2. Stage it. This verifies it, copies its files uncompressed (CSV tables, JSONL, JSON metadata) to
+   `staged/catalog-snapshots/<id>/` and adds its entry to `catalog_snapshots.lock`:
    ```bash
    uv run python -m catalog_loader stage /path/to/erp_schema_graph/artifacts/snapshots/<id>
    ```
 3. Upload the staged files:
    ```bash
    aws s3 sync staged/catalog-snapshots "s3://<bucket>/catalog-snapshots" \
-     --endpoint-url https://<account_id>.r2.cloudflarestorage.com --content-type application/gzip
+     --endpoint-url https://<account_id>.r2.cloudflarestorage.com
    ```
 4. Commit `catalog_snapshots.lock` in a pull request. The next deploy of each environment loads only the new snapshot.
 
