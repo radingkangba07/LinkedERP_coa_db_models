@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LOCK = ROOT / "catalog_snapshots.lock"
 SEED_DIR = ROOT / "seed" / "erp_configs"
 PREFIX = "catalog-snapshots"
-ENV = ("CATALOG_S3_ENDPOINT", "CATALOG_S3_ACCESS_KEY", "CATALOG_S3_SECRET_KEY", "CATALOG_S3_BUCKET")
+ENV = ("S3_ENDPOINT", "S3_ACCESS_KEY", "S3_SECRET_KEY", "S3_BUCKET")
 
 
 def _sha256(data: bytes) -> str:
@@ -80,15 +80,15 @@ def _s3_fetch():
 
     client = boto3.client(
         "s3",
-        endpoint_url=os.environ["CATALOG_S3_ENDPOINT"],
-        aws_access_key_id=os.environ["CATALOG_S3_ACCESS_KEY"],
-        aws_secret_access_key=os.environ["CATALOG_S3_SECRET_KEY"],
-        region_name=os.environ.get("CATALOG_S3_REGION") or "auto",
+        endpoint_url=os.environ["S3_ENDPOINT"],
+        aws_access_key_id=os.environ["S3_ACCESS_KEY"],
+        aws_secret_access_key=os.environ["S3_SECRET_KEY"],
+        region_name=os.environ.get("S3_REGION") or "auto",
         # R2 rejects the CRC checksums newer botocore sends by default.
         config=Config(signature_version="s3v4", request_checksum_calculation="when_required",
                       response_checksum_validation="when_required"),
     )
-    bucket = os.environ["CATALOG_S3_BUCKET"]
+    bucket = os.environ["S3_BUCKET"]
     return lambda key: client.get_object(Bucket=bucket, Key=key)["Body"].read()
 
 

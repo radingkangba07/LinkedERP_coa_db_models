@@ -6,7 +6,7 @@
 
   python -m catalog_loader stage SNAPSHOT_DIR [--out staged]
   python -m catalog_loader sync [--database-url URL] [--source-dir DIR]
-      (reads catalog_snapshots.lock; downloads from CATALOG_S3_* object storage unless --source-dir is given)
+      (reads catalog_snapshots.lock; downloads from S3_* object storage unless --source-dir is given)
 
 Order per environment: migrate the database (alembic upgrade head), then sync, which seeds each ERP
 configuration and loads each locked baseline that is not yet loaded. Every command is idempotent.
