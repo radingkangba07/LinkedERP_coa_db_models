@@ -20,4 +20,13 @@ dev = [
     "alembic>=1.15",
     "asyncpg>=0.30",
     "python-dotenv>=1.0",
+    { include-group = "loader" },
 ]
+# catalog_loader/ (repository root, not part of the wheel): loads ERP catalogue snapshots.
+loader = [
+    "psycopg[binary]>=3.2",
+    "boto3>=1.36",  # 1.36 adds the checksum settings R2 needs
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

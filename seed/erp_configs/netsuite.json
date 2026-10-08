@@ -1,0 +1,376 @@
+{
+  "erp": "netsuite",
+  "authority_interface": "suitescript_record",
+  "discovery_interface": "suitetalk_rest",
+  "custom_prefixes": {
+    "model": [
+      "customrecord"
+    ],
+    "field": [
+      "custentity",
+      "custitem",
+      "custbody",
+      "custcol",
+      "custrecord",
+      "custevent"
+    ]
+  },
+  "discovery_type_families": {
+    "string": "text",
+    "boolean": "boolean",
+    "integer": "number",
+    "number": "number",
+    "date": "datetime",
+    "date-time": "datetime",
+    "enum": "enum",
+    "reference": "reference",
+    "object": "complex",
+    "array": "complex"
+  },
+  "notes": "Initial content, converted from scope template version 1.",
+  "field_groups": [],
+  "scope_routes": [
+    {
+      "scope": "customers",
+      "model": "customer",
+      "role": "primary",
+      "route_key": "company",
+      "subtype_routing": {
+        "discriminator": "isperson",
+        "value": "F"
+      },
+      "filters": [],
+      "child_paths": [
+        "addressbook",
+        "contactroles"
+      ],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "customer",
+      "role": "primary",
+      "route_key": "individual",
+      "subtype_routing": {
+        "discriminator": "isperson",
+        "value": "T"
+      },
+      "filters": [],
+      "child_paths": [
+        "addressbook",
+        "contactroles"
+      ],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "subsidiary",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "currency",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "term",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "vendor",
+      "role": "primary",
+      "route_key": "company",
+      "subtype_routing": {
+        "discriminator": "isperson",
+        "value": "F"
+      },
+      "filters": [],
+      "child_paths": [
+        "addressbook"
+      ],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "vendor",
+      "role": "primary",
+      "route_key": "individual",
+      "subtype_routing": {
+        "discriminator": "isperson",
+        "value": "T"
+      },
+      "filters": [],
+      "child_paths": [
+        "addressbook"
+      ],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "subsidiary",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "currency",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "term",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "contacts",
+      "model": "contact",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "inventoryitem",
+      "role": "primary",
+      "route_key": "inventoryitem",
+      "subtype_routing": {
+        "discriminator": "itemtype",
+        "record_type": "inventoryitem"
+      },
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "noninventorysaleitem",
+      "role": "primary",
+      "route_key": "noninventorysaleitem",
+      "subtype_routing": {
+        "discriminator": "itemtype",
+        "record_type": "noninventorysaleitem"
+      },
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "noninventorypurchaseitem",
+      "role": "primary",
+      "route_key": "noninventorypurchaseitem",
+      "subtype_routing": {
+        "discriminator": "itemtype",
+        "record_type": "noninventorypurchaseitem"
+      },
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "noninventoryitem",
+      "role": "primary",
+      "route_key": "noninventoryitem",
+      "subtype_routing": {
+        "discriminator": "itemtype",
+        "record_type": "noninventoryitem"
+      },
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "serviceitem",
+      "role": "primary",
+      "route_key": "serviceitem",
+      "subtype_routing": {
+        "discriminator": "itemtype",
+        "record_type": "serviceitem"
+      },
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "assemblyitem",
+      "role": "primary",
+      "route_key": "assemblyitem",
+      "subtype_routing": {
+        "discriminator": "itemtype",
+        "record_type": "assemblyitem"
+      },
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "kititem",
+      "role": "primary",
+      "route_key": "kititem",
+      "subtype_routing": {
+        "discriminator": "itemtype",
+        "record_type": "kititem"
+      },
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "unitstype",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "classification",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "locations",
+      "model": "location",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "locations",
+      "model": "subsidiary",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "fixed_assets",
+      "model": "customrecord_ncfar_asset",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": true,
+      "notes": "Fixed Assets Management SuiteApp custom record; present only where the bundle is installed"
+    }
+  ]
+}
