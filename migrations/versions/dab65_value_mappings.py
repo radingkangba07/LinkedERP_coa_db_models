@@ -21,7 +21,9 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), nullable=False),
         sa.Column("run_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("source_field", sa.String(255), nullable=False),
-        sa.Column("source_value", sa.Text(), nullable=False),
+        # Capped at 1000 chars to keep the B-tree unique index entry under PostgreSQL's
+        # ~2730-byte limit (UUID 16B + varchar(255) + this column).
+        sa.Column("source_value", sa.String(1000), nullable=False),
         sa.Column("mapping_subtype", sa.String(20), nullable=False),
         sa.Column("records_count", sa.Integer(), nullable=True),
         sa.Column("records_pct", sa.Float(), nullable=True),
@@ -65,6 +67,7 @@ def upgrade() -> None:
     op.create_index("ix_value_mappings_run_id", "value_mappings", ["run_id"])
     op.create_index("ix_value_mappings_run_field", "value_mappings", ["run_id", "source_field"])
     op.create_index("ix_value_mappings_run_status", "value_mappings", ["run_id", "status"])
+    op.create_index("ix_value_mappings_run_subtype", "value_mappings", ["run_id", "mapping_subtype"])
 
     op.create_table(
         "value_mapping_history",
@@ -73,9 +76,30 @@ def upgrade() -> None:
         sa.Column("changed_by", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("changed_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("previous_transformation_type", sa.String(30), nullable=True),
+        sa.Column("new_transformation_type", sa.String(30), nullable=True),
         sa.Column("previous_target_value", sa.Text(), nullable=True),
+        sa.Column("new_target_value", sa.Text(), nullable=True),
         sa.Column("previous_target_record_id", sa.String(255), nullable=True),
+        sa.Column("new_target_record_id", sa.String(255), nullable=True),
         sa.Column("previous_status", sa.String(20), nullable=True),
+        sa.Column("new_status", sa.String(20), nullable=True),
+        sa.Column("previous_notes", sa.Text(), nullable=True),
+        sa.CheckConstraint(
+            "previous_status IS NULL OR previous_status IN ('suggested','unresolved','confirmed','blocked','excluded')",
+            name="ck_value_mapping_history_prev_status",
+        ),
+        sa.CheckConstraint(
+            "new_status IS NULL OR new_status IN ('suggested','unresolved','confirmed','blocked','excluded')",
+            name="ck_value_mapping_history_new_status",
+        ),
+        sa.CheckConstraint(
+            "previous_transformation_type IS NULL OR previous_transformation_type IN ('replace','replace_preserve','apply_default','normalise','no_legal_target')",
+            name="ck_value_mapping_history_prev_transformation_type",
+        ),
+        sa.CheckConstraint(
+            "new_transformation_type IS NULL OR new_transformation_type IN ('replace','replace_preserve','apply_default','normalise','no_legal_target')",
+            name="ck_value_mapping_history_new_transformation_type",
+        ),
         sa.ForeignKeyConstraint(["changed_by"], ["users.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["mapping_id"], ["value_mappings.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
@@ -86,6 +110,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index("ix_value_mapping_history_mapping_id", table_name="value_mapping_history")
     op.drop_table("value_mapping_history")
+    op.drop_index("ix_value_mappings_run_subtype", table_name="value_mappings")
     op.drop_index("ix_value_mappings_run_status", table_name="value_mappings")
     op.drop_index("ix_value_mappings_run_field", table_name="value_mappings")
     op.drop_index("ix_value_mappings_run_id", table_name="value_mappings")

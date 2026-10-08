@@ -419,7 +419,7 @@ class ValueMapping(Base):
         UUID(as_uuid=True), ForeignKey("pipeline_runs.id", ondelete="CASCADE"), nullable=False
     )
     source_field: Mapped[str] = mapped_column(String(255), nullable=False)
-    source_value: Mapped[str] = mapped_column(Text, nullable=False)
+    source_value: Mapped[str] = mapped_column(String(1000), nullable=False)
     # Drives which tab this row appears on in the UI.
     mapping_subtype: Mapped[str] = mapped_column(String(20), nullable=False)
     records_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -471,6 +471,7 @@ class ValueMapping(Base):
         Index("ix_value_mappings_run_id", "run_id"),
         Index("ix_value_mappings_run_field", "run_id", "source_field"),
         Index("ix_value_mappings_run_status", "run_id", "status"),
+        Index("ix_value_mappings_run_subtype", "run_id", "mapping_subtype"),
     )
 
 
@@ -490,8 +491,31 @@ class ValueMappingHistory(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     previous_transformation_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    new_transformation_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
     previous_target_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_target_value: Mapped[str | None] = mapped_column(Text, nullable=True)
     previous_target_record_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    new_target_record_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     previous_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    new_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    previous_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    __table_args__ = (Index("ix_value_mapping_history_mapping_id", "mapping_id"),)
+    __table_args__ = (
+        CheckConstraint(
+            f"previous_status IS NULL OR previous_status IN ({_VALID_VALUE_STATUSES})",
+            name="ck_value_mapping_history_prev_status",
+        ),
+        CheckConstraint(
+            f"new_status IS NULL OR new_status IN ({_VALID_VALUE_STATUSES})",
+            name="ck_value_mapping_history_new_status",
+        ),
+        CheckConstraint(
+            f"previous_transformation_type IS NULL OR previous_transformation_type IN ({_VALID_VALUE_TRANSFORMATION_TYPES})",
+            name="ck_value_mapping_history_prev_transformation_type",
+        ),
+        CheckConstraint(
+            f"new_transformation_type IS NULL OR new_transformation_type IN ({_VALID_VALUE_TRANSFORMATION_TYPES})",
+            name="ck_value_mapping_history_new_transformation_type",
+        ),
+        Index("ix_value_mapping_history_mapping_id", "mapping_id"),
+    )
