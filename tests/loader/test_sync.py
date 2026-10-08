@@ -20,11 +20,11 @@ def _staged(tmp_path: Path) -> tuple[str, Path, Path]:
     return sid, tmp_path / "staged", lock
 
 
-def test_stage_ships_no_jsonl_and_is_reproducible(tmp_path: Path) -> None:
+def test_stage_ships_every_file_uncompressed_and_is_reproducible(tmp_path: Path) -> None:
     sid, staged, lock = _staged(tmp_path)
     entry = json.loads(lock.read_text())["snapshots"][sid]
-    assert "nodes.jsonl.gz" not in entry and "edges.jsonl.gz" not in entry
-    assert {"fields.csv.gz", "tables.json.gz", "manifest.json.gz"} <= set(entry)
+    assert {"nodes.jsonl", "edges.jsonl", "fields.csv", "tables.json", "manifest.json"} <= set(entry)
+    assert (staged / entry["fields.csv"]["key"]).read_bytes()[:2] != b"\x1f\x8b"  # not gzip
     assert all(f["key"] == f"catalog-snapshots/{sid}/{name}" for name, f in entry.items())
     again = tmp_path / "again.lock"
     sync.stage(gs.snapshots_dir(tmp_path / "built") / sid, tmp_path / "staged2", again)
@@ -36,6 +36,6 @@ def test_download_verifies_and_rejects_a_changed_file(tmp_path: Path) -> None:
     entry = json.loads(lock.read_text())["snapshots"][sid]
     d = sync.download(sid, entry, sync._dir_fetch(staged), tmp_path / "store")
     assert gs.verify(d) == []
-    (staged / entry["fields.csv.gz"]["key"]).write_bytes(b"tampered")
+    (staged / entry["fields.csv"]["key"]).write_bytes(b"tampered")
     with pytest.raises(load.LoaderError, match="sha256"):
         sync.download(sid, entry, sync._dir_fetch(staged), tmp_path / "store2")

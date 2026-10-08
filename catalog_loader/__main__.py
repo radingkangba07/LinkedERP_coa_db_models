@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     base.add_argument("--snapshot", required=True, help="graph snapshot id, e.g. odoo-18.0-3c92dbec93d9b412af1c")
     base.add_argument("--source", choices=["csv", "jsonl"], default="csv",
                       help="read the snapshot's CSV tables (default) or its JSONL files")
-    stg = sub.add_parser("stage", help="gzip a built snapshot for upload and add it to catalog_snapshots.lock")
+    stg = sub.add_parser("stage", help="copy a built snapshot for upload and add it to catalog_snapshots.lock")
     stg.add_argument("snapshot_dir", help="built snapshot directory, e.g. artifacts/snapshots/<id>")
     stg.add_argument("--out", default="staged", help="output directory to upload (default: staged)")
     syn = sub.add_parser("sync", help="seed ERP configurations and load every locked baseline not yet loaded")

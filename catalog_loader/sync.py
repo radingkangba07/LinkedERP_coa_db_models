@@ -3,17 +3,18 @@
 catalog_snapshots.lock (repository root) pins every file of every snapshot by object key and sha256:
 
     {"prefix": "catalog-snapshots",
-     "snapshots": {"<graph snapshot id>": {"<file>.gz": {"key": "...", "sha256": "...", "bytes": 123}}}}
+     "snapshots": {"<graph snapshot id>": {"<file>": {"key": "...", "sha256": "...", "bytes": 123}}}}
 
-stage   gzips one built snapshot directory (CSV tables and JSON metadata; the JSONL files are not shipped),
-        checks that it verifies without the JSONL, and writes its lock entry. Upload the staged directory.
-sync    for each locked snapshot that is not yet a published baseline: download, check sha256, gunzip,
-        then seed the ERP configurations and load the baseline. Already loaded snapshots are not downloaded.
+Files are stored as built, uncompressed: the CSV tables, nodes.jsonl / edges.jsonl and the JSON metadata.
+
+stage   verifies one built snapshot directory, copies its files to <out>/<prefix>/<id>/ for upload and writes
+        its lock entry.
+sync    for each locked snapshot that is not yet a published baseline: download, check sha256, then seed the
+        ERP configurations and load the baseline. Already loaded snapshots are not downloaded.
 """
 
 from __future__ import annotations
 
-import gzip
 import hashlib
 import json
 import os
@@ -48,30 +49,21 @@ def write_lock(lock: dict[str, Any], path: Path = LOCK) -> None:
 
 # --------------------------------------------------------------------------- stage
 def stage(snapshot_dir: Path, out: Path, lock_path: Path = LOCK) -> dict[str, Any]:
-    """Write <out>/<prefix>/<snapshot id>/<file>.gz and the snapshot's lock entry."""
+    """Copy <snapshot dir>/* to <out>/<prefix>/<snapshot id>/ and write the snapshot's lock entry."""
     src = Path(snapshot_dir)
     sid = gs.read_manifest(src)["snapshot_id"]
+    problems = gs.verify(src)
+    if problems:
+        raise load.LoaderError(f"{sid} does not verify: {'; '.join(problems)}")
     lock = read_lock(lock_path)
     prefix = lock.get("prefix", PREFIX)
-    with tempfile.TemporaryDirectory() as tmp:
-        csv_only = Path(tmp) / sid
-        csv_only.mkdir()
-        names = sorted(p.name for p in src.iterdir() if p.is_file() and p.suffix != ".jsonl")
-        for name in names:
-            shutil.copyfile(src / name, csv_only / name)
-        problems = gs.verify(csv_only)
-        if problems:
-            raise load.LoaderError(f"{sid} does not verify from its CSV tables: {'; '.join(problems)}")
     dest = Path(out) / prefix / sid
     dest.mkdir(parents=True, exist_ok=True)
     entry = {}
-    for name in names:
-        raw = (src / name).read_bytes()
-        gz = gzip.compress(raw, compresslevel=9, mtime=0)  # mtime 0: same input, same bytes, same hash
-        if gzip.decompress(gz) != raw:
-            raise load.LoaderError(f"{sid}/{name}: gzip round trip changed the bytes")
-        (dest / f"{name}.gz").write_bytes(gz)
-        entry[f"{name}.gz"] = {"key": f"{prefix}/{sid}/{name}.gz", "sha256": _sha256(gz), "bytes": len(gz)}
+    for name in sorted(p.name for p in src.iterdir() if p.is_file()):
+        data = (src / name).read_bytes()
+        shutil.copyfile(src / name, dest / name)
+        entry[name] = {"key": f"{prefix}/{sid}/{name}", "sha256": _sha256(data), "bytes": len(data)}
     lock.setdefault("snapshots", {})[sid] = entry
     lock["prefix"] = prefix
     write_lock(lock, lock_path)
@@ -105,14 +97,14 @@ def _dir_fetch(root: Path):
 
 
 def download(sid: str, entry: dict[str, Any], fetch, store: Path) -> Path:
-    """Fetch, check sha256 against the lock, gunzip into <store>/snapshots/<sid>/."""
+    """Fetch, check sha256 against the lock, write into <store>/snapshots/<sid>/."""
     d = gs.snapshots_dir(store) / sid
     d.mkdir(parents=True, exist_ok=True)
     for name, f in sorted(entry.items()):
-        gz = fetch(f["key"])
-        if _sha256(gz) != f["sha256"]:
+        data = fetch(f["key"])
+        if _sha256(data) != f["sha256"]:
             raise load.LoaderError(f"{f['key']}: sha256 does not match catalog_snapshots.lock")
-        (d / name.removesuffix(".gz")).write_bytes(gzip.decompress(gz))
+        (d / name).write_bytes(data)
     return d
 
 
