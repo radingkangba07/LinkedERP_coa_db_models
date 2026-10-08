@@ -419,7 +419,7 @@ class ValueMapping(Base):
         UUID(as_uuid=True), ForeignKey("pipeline_runs.id", ondelete="CASCADE"), nullable=False
     )
     source_field: Mapped[str] = mapped_column(String(255), nullable=False)
-    source_value: Mapped[str] = mapped_column(String(1000), nullable=False)
+    source_value: Mapped[str] = mapped_column(Text, nullable=False)
     # Drives which tab this row appears on in the UI.
     mapping_subtype: Mapped[str] = mapped_column(String(20), nullable=False)
     records_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -467,7 +467,18 @@ class ValueMapping(Base):
             f"mapping_source IN ({_VALID_VALUE_MAPPING_SOURCES})",
             name="ck_value_mappings_mapping_source",
         ),
-        UniqueConstraint("run_id", "source_field", "source_value", name="uix_value_mappings_run_field_value"),
+        # The database enforces uniqueness via md5(source_value) to avoid the PostgreSQL
+        # B-tree entry byte limit. Upserts must use:
+        #   index_elements=["run_id", "source_field", func.md5(ValueMapping.source_value)]
+        # Do NOT use constraint="uix_value_mappings_run_field_value" — PostgreSQL will reject
+        # it because there is no UniqueConstraint, only a unique Index on the md5 expression.
+        Index(
+            "uix_value_mappings_run_field_value",
+            "run_id",
+            "source_field",
+            text("md5(source_value)"),
+            unique=True,
+        ),
         Index("ix_value_mappings_run_id", "run_id"),
         Index("ix_value_mappings_run_field", "run_id", "source_field"),
         Index("ix_value_mappings_run_status", "run_id", "status"),
@@ -484,6 +495,8 @@ class ValueMappingHistory(Base):
     mapping_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("value_mappings.id", ondelete="CASCADE"), nullable=False
     )
+    # Denormalised for direct querying without joining to value_mappings.
+    run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     changed_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -499,6 +512,8 @@ class ValueMappingHistory(Base):
     previous_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
     new_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
     previous_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     __table_args__ = (
         CheckConstraint(
@@ -518,4 +533,5 @@ class ValueMappingHistory(Base):
             name="ck_value_mapping_history_new_transformation_type",
         ),
         Index("ix_value_mapping_history_mapping_id", "mapping_id"),
+        Index("ix_value_mapping_history_run_id", "run_id"),
     )
