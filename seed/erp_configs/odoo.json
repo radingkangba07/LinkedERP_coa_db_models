@@ -1,0 +1,548 @@
+{
+  "erp": "odoo",
+  "authority_interface": "orm",
+  "discovery_interface": "orm",
+  "custom_prefixes": {
+    "model": [
+      "x_"
+    ],
+    "field": [
+      "x_"
+    ]
+  },
+  "discovery_type_families": {
+    "binary": "binary",
+    "boolean": "boolean",
+    "char": "text",
+    "date": "datetime",
+    "datetime": "datetime",
+    "float": "number",
+    "html": "text",
+    "integer": "number",
+    "json": "complex",
+    "many2many": "reference",
+    "many2one": "reference",
+    "many2one_reference": "reference",
+    "monetary": "number",
+    "one2many": "reference",
+    "properties": "complex",
+    "properties_definition": "complex",
+    "reference": "reference",
+    "selection": "enum",
+    "serialized": "complex",
+    "text": "text"
+  },
+  "notes": "Initial content, converted from scope template version 4.",
+  "field_groups": [
+    {
+      "group_key": "website",
+      "modules": [
+        "website*"
+      ],
+      "names": [
+        "website_*",
+        "seo_*",
+        "is_published",
+        "can_publish",
+        "*_ribbon_id"
+      ],
+      "relations": []
+    },
+    {
+      "group_key": "localisation",
+      "modules": [
+        "l10n_*"
+      ],
+      "names": [
+        "l10n_*"
+      ],
+      "relations": []
+    },
+    {
+      "group_key": "system",
+      "modules": [
+        "mail",
+        "rating",
+        "portal"
+      ],
+      "names": [
+        "activity_*",
+        "message_*",
+        "rating_*",
+        "color",
+        "sequence",
+        "image_fetch_pending",
+        "can_image_*"
+      ],
+      "relations": []
+    },
+    {
+      "group_key": "accounting",
+      "modules": [
+        "account",
+        "stock_account",
+        "purchase_stock"
+      ],
+      "names": [
+        "property_account_*",
+        "taxes_id",
+        "supplier_taxes_id",
+        "account_tag_ids"
+      ],
+      "relations": []
+    },
+    {
+      "group_key": "pos",
+      "modules": [
+        "point_of_sale",
+        "pos_*"
+      ],
+      "names": [
+        "available_in_pos",
+        "pos_categ_ids",
+        "to_weight",
+        "self_order_available"
+      ],
+      "relations": []
+    },
+    {
+      "group_key": "services",
+      "modules": [
+        "project",
+        "sale_project",
+        "sale_timesheet",
+        "repair",
+        "membership",
+        "hr_expense",
+        "sale_expense",
+        "sale_gelato",
+        "sale_purchase",
+        "product_email_template"
+      ],
+      "names": [
+        "service_*",
+        "membership*",
+        "create_repair",
+        "can_be_expensed",
+        "gelato_*"
+      ],
+      "relations": []
+    },
+    {
+      "group_key": "related_masters",
+      "modules": [],
+      "names": [],
+      "relations": [
+        "stock.warehouse",
+        "res.users"
+      ]
+    }
+  ],
+  "scope_routes": [
+    {
+      "scope": "customers",
+      "model": "res.partner",
+      "role": "primary",
+      "route_key": "company",
+      "subtype_routing": {
+        "discriminator": "is_company",
+        "value": true
+      },
+      "filters": [
+        [
+          "customer_rank",
+          ">",
+          0
+        ]
+      ],
+      "child_paths": [
+        "bank_ids",
+        "child_ids"
+      ],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "res.partner",
+      "role": "primary",
+      "route_key": "individual",
+      "subtype_routing": {
+        "discriminator": "is_company",
+        "value": false
+      },
+      "filters": [
+        [
+          "customer_rank",
+          ">",
+          0
+        ]
+      ],
+      "child_paths": [
+        "bank_ids",
+        "child_ids"
+      ],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "res.partner.bank",
+      "role": "child",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "account.payment.term",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "res.country",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "customers",
+      "model": "res.currency",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "res.partner",
+      "role": "primary",
+      "route_key": "company",
+      "subtype_routing": {
+        "discriminator": "is_company",
+        "value": true
+      },
+      "filters": [
+        [
+          "supplier_rank",
+          ">",
+          0
+        ]
+      ],
+      "child_paths": [
+        "bank_ids",
+        "child_ids"
+      ],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "res.partner",
+      "role": "primary",
+      "route_key": "individual",
+      "subtype_routing": {
+        "discriminator": "is_company",
+        "value": false
+      },
+      "filters": [
+        [
+          "supplier_rank",
+          ">",
+          0
+        ]
+      ],
+      "child_paths": [
+        "bank_ids",
+        "child_ids"
+      ],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "res.partner.bank",
+      "role": "child",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "product.supplierinfo",
+      "role": "child",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "account.payment.term",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vendors",
+      "model": "res.currency",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "contacts",
+      "model": "res.partner",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [
+        [
+          "customer_rank",
+          "=",
+          0
+        ],
+        [
+          "supplier_rank",
+          "=",
+          0
+        ]
+      ],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "contacts",
+      "model": "res.partner.category",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "product.template",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [
+        "product_variant_ids",
+        "seller_ids"
+      ],
+      "exclude_field_groups": [
+        "localisation",
+        "system",
+        "related_masters"
+      ],
+      "optional_field_groups": [
+        "accounting",
+        "pos",
+        "services",
+        "website"
+      ],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "product.product",
+      "role": "child",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [
+        "localisation",
+        "system",
+        "related_masters"
+      ],
+      "optional_field_groups": [
+        "accounting",
+        "pos",
+        "services",
+        "website"
+      ],
+      "account_specific": false,
+      "notes": "variants of product.template"
+    },
+    {
+      "scope": "items",
+      "model": "product.category",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "items",
+      "model": "uom.uom",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "locations",
+      "model": "stock.location",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "locations",
+      "model": "stock.warehouse",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vehicles",
+      "model": "fleet.vehicle",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "vehicles",
+      "model": "fleet.vehicle.model",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "equipment",
+      "model": "maintenance.equipment",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "equipment",
+      "model": "maintenance.equipment.category",
+      "role": "reference",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": false,
+      "notes": null
+    },
+    {
+      "scope": "fixed_assets",
+      "model": "account.asset",
+      "role": "primary",
+      "route_key": "default",
+      "subtype_routing": {},
+      "filters": [],
+      "child_paths": [],
+      "exclude_field_groups": [],
+      "optional_field_groups": [],
+      "account_specific": true,
+      "notes": "Odoo Enterprise accounting module; absent from Community baselines"
+    }
+  ]
+}
