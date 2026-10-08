@@ -33,10 +33,10 @@ SUBJECT_PUBLISHED = "catalog.event.snapshot_published"
 ERP_ID_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 SCOPES = set(re.findall(r"'([a-z_]+)'", _VALID_SCOPES))
 ROLES = {"primary", "child", "reference"}
-SETTINGS = ("authority_interface", "discovery_interface", "custom_prefixes", "discovery_type_families")
+SETTINGS = ("authority_interface", "discovery_interface", "custom_prefixes", "discovery_type_families", "products")
 GROUP_KEYS = ("group_key", "modules", "names", "relations")
 ROUTE_KEYS = ("scope", "model", "role", "route_key", "subtype_routing", "filters", "child_paths",
-              "exclude_field_groups", "optional_field_groups", "account_specific")
+              "exclude_field_groups", "optional_field_groups", "account_specific", "identifier_fields")
 _BATCH = 1000
 
 
@@ -56,7 +56,7 @@ def _normalise(doc: dict) -> dict:
         row = {k: r.get(k) for k in ROUTE_KEYS}
         row["route_key"] = str(row["route_key"] or "default")
         row["account_specific"] = bool(row["account_specific"])
-        for k in ("filters", "child_paths", "exclude_field_groups", "optional_field_groups"):
+        for k in ("filters", "child_paths", "exclude_field_groups", "optional_field_groups", "identifier_fields"):
             row[k] = row[k] or []
         row["subtype_routing"] = row["subtype_routing"] or {}
         routes.append(row)
@@ -64,6 +64,7 @@ def _normalise(doc: dict) -> dict:
     settings = {k: doc.get(k) for k in SETTINGS}
     settings["custom_prefixes"] = settings["custom_prefixes"] or {}
     settings["discovery_type_families"] = settings["discovery_type_families"] or {}
+    settings["products"] = settings["products"] or {}
     return {"settings": settings, "field_groups": groups, "scope_routes": routes}
 
 
@@ -74,6 +75,11 @@ def validate_config(doc: dict) -> list[str]:
         problems.append(f"erp {erp!r} must match {ERP_ID_RE.pattern}")
     if not doc.get("authority_interface"):
         problems.append("authority_interface is required")
+    products = doc.get("products") or {}
+    if not isinstance(products, dict) or not all(
+        isinstance(k, str) and k and isinstance(v, str) and v for k, v in products.items()
+    ):
+        problems.append("products must map ERP product ids to baseline editions, e.g. {\"odoo\": \"community\"}")
     keys = [g.get("group_key") for g in doc.get("field_groups") or []]
     if len(keys) != len(set(keys)) or not all(keys):
         problems.append("field group keys must be present and unique")
@@ -87,6 +93,9 @@ def validate_config(doc: dict) -> list[str]:
         unknown = set(r.get("exclude_field_groups") or []) | set(r.get("optional_field_groups") or [])
         if unknown - set(keys):
             problems.append(f"{name}: unknown field groups {sorted(unknown - set(keys))}")
+        idf = r.get("identifier_fields") or []
+        if not isinstance(idf, list) or not all(isinstance(f, str) and f for f in idf) or len(idf) != len(set(idf)):
+            problems.append(f"{name}: identifier_fields must be a list of distinct field names")
         ident = (r.get("scope"), r.get("model"), str(r.get("route_key") or "default"))
         if ident in seen:
             problems.append(f"{name}: duplicate route {ident[2]!r}")

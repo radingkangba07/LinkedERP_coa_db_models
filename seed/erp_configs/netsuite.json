@@ -27,6 +27,9 @@
     "object": "complex",
     "array": "complex"
   },
+  "products": {
+    "oracle_netsuite": "standard"
+  },
   "notes": "Initial content, converted from scope template version 1.",
   "field_groups": [],
   "scope_routes": [
@@ -209,7 +212,12 @@
       "exclude_field_groups": [],
       "optional_field_groups": [],
       "account_specific": false,
-      "notes": null
+      "notes": null,
+      "identifier_fields": [
+        "itemid",
+        "externalid",
+        "upccode"
+      ]
     },
     {
       "scope": "items",
@@ -225,7 +233,11 @@
       "exclude_field_groups": [],
       "optional_field_groups": [],
       "account_specific": false,
-      "notes": null
+      "notes": null,
+      "identifier_fields": [
+        "itemid",
+        "upccode"
+      ]
     },
     {
       "scope": "items",
@@ -241,7 +253,11 @@
       "exclude_field_groups": [],
       "optional_field_groups": [],
       "account_specific": false,
-      "notes": null
+      "notes": null,
+      "identifier_fields": [
+        "itemid",
+        "upccode"
+      ]
     },
     {
       "scope": "items",
@@ -257,7 +273,12 @@
       "exclude_field_groups": [],
       "optional_field_groups": [],
       "account_specific": false,
-      "notes": null
+      "notes": null,
+      "identifier_fields": [
+        "itemid",
+        "externalid",
+        "upccode"
+      ]
     },
     {
       "scope": "items",
@@ -273,7 +294,12 @@
       "exclude_field_groups": [],
       "optional_field_groups": [],
       "account_specific": false,
-      "notes": null
+      "notes": null,
+      "identifier_fields": [
+        "itemid",
+        "externalid",
+        "upccode"
+      ]
     },
     {
       "scope": "items",
@@ -289,7 +315,12 @@
       "exclude_field_groups": [],
       "optional_field_groups": [],
       "account_specific": false,
-      "notes": null
+      "notes": null,
+      "identifier_fields": [
+        "itemid",
+        "externalid",
+        "upccode"
+      ]
     },
     {
       "scope": "items",
@@ -305,7 +336,12 @@
       "exclude_field_groups": [],
       "optional_field_groups": [],
       "account_specific": false,
-      "notes": null
+      "notes": null,
+      "identifier_fields": [
+        "itemid",
+        "externalid",
+        "upccode"
+      ]
     },
     {
       "scope": "items",

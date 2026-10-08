@@ -74,6 +74,9 @@ class CatalogErpConfig(Base):
     custom_prefixes: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
     # Native type -> normalised type family, for fields added from account discovery.
     discovery_type_families: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    # ERP product id (src/config/erp_systems.yaml in the backend) -> baseline edition it uses,
+    # e.g. {"oracle_netsuite": "standard"}. Products not listed have no catalogue.
+    products: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -133,6 +136,9 @@ class CatalogScopeRoute(Base):
     optional_field_groups: Mapped[list] = mapped_column(JSONB, nullable=False, server_default=text("'[]'::jsonb"))
     # Model exists only in some accounts (e.g. an Enterprise module); absent from baselines.
     account_specific: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    # Native field names on this model that can serve as import keys (match existing records),
+    # e.g. ["default_code", "barcode"]. Which key a workstream uses is chosen per workstream.
+    identifier_fields: Mapped[list] = mapped_column(JSONB, nullable=False, server_default=text("'[]'::jsonb"))
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     __table_args__ = (
