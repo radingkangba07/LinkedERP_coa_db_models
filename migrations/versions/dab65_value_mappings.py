@@ -21,9 +21,13 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), nullable=False),
         sa.Column("run_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("source_field", sa.String(255), nullable=False),
-        # Capped at 1000 chars to keep the B-tree unique index entry under PostgreSQL's
-        # ~2730-byte limit (UUID 16B + varchar(255) + this column).
-        sa.Column("source_value", sa.String(1000), nullable=False),
+        # source_value is Text; uniqueness is enforced via md5(source_value) (see index below)
+        # to avoid the PostgreSQL B-tree entry limit (~2704 bytes) that a composite index on
+        # (run_id, source_field, source_value) would breach for multi-byte UTF-8 values.
+        # NULL source values are not permitted. The ML service must represent a missing source
+        # value as an empty string '' — agreed convention so that null and empty-string do not
+        # collapse into the same unique row.
+        sa.Column("source_value", sa.Text(), nullable=False),
         sa.Column("mapping_subtype", sa.String(20), nullable=False),
         sa.Column("records_count", sa.Integer(), nullable=True),
         sa.Column("records_pct", sa.Float(), nullable=True),
@@ -38,7 +42,13 @@ def upgrade() -> None:
         sa.Column("confirmed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            onupdate=sa.func.now(),
+            nullable=False,
+        ),
         sa.CheckConstraint(
             "mapping_subtype IN ('allowed_value','related_record')",
             name="ck_value_mappings_mapping_subtype",
@@ -62,17 +72,23 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["confirmed_by"], ["users.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["run_id"], ["pipeline_runs.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("run_id", "source_field", "source_value", name="uix_value_mappings_run_field_value"),
     )
     op.create_index("ix_value_mappings_run_id", "value_mappings", ["run_id"])
     op.create_index("ix_value_mappings_run_field", "value_mappings", ["run_id", "source_field"])
     op.create_index("ix_value_mappings_run_status", "value_mappings", ["run_id", "status"])
     op.create_index("ix_value_mappings_run_subtype", "value_mappings", ["run_id", "mapping_subtype"])
+    op.create_index(
+        "uix_value_mappings_run_field_value",
+        "value_mappings",
+        ["run_id", "source_field", sa.text("md5(source_value)")],
+        unique=True,
+    )
 
     op.create_table(
         "value_mapping_history",
         sa.Column("id", postgresql.UUID(as_uuid=True), server_default=sa.text("gen_random_uuid()"), nullable=False),
         sa.Column("mapping_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("run_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("changed_by", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("changed_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("previous_transformation_type", sa.String(30), nullable=True),
@@ -84,6 +100,8 @@ def upgrade() -> None:
         sa.Column("previous_status", sa.String(20), nullable=True),
         sa.Column("new_status", sa.String(20), nullable=True),
         sa.Column("previous_notes", sa.Text(), nullable=True),
+        sa.Column("new_notes", sa.Text(), nullable=True),
+        sa.Column("reason", sa.Text(), nullable=True),
         sa.CheckConstraint(
             "previous_status IS NULL OR previous_status IN ('suggested','unresolved','confirmed','blocked','excluded')",
             name="ck_value_mapping_history_prev_status",
@@ -105,11 +123,14 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_value_mapping_history_mapping_id", "value_mapping_history", ["mapping_id"])
+    op.create_index("ix_value_mapping_history_run_id", "value_mapping_history", ["run_id"])
 
 
 def downgrade() -> None:
+    op.drop_index("ix_value_mapping_history_run_id", table_name="value_mapping_history")
     op.drop_index("ix_value_mapping_history_mapping_id", table_name="value_mapping_history")
     op.drop_table("value_mapping_history")
+    op.drop_index("uix_value_mappings_run_field_value", table_name="value_mappings")
     op.drop_index("ix_value_mappings_run_subtype", table_name="value_mappings")
     op.drop_index("ix_value_mappings_run_status", table_name="value_mappings")
     op.drop_index("ix_value_mappings_run_field", table_name="value_mappings")
