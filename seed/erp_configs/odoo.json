@@ -32,6 +32,9 @@
     "serialized": "complex",
     "text": "text"
   },
+  "products": {
+    "odoo": "community"
+  },
   "notes": "Initial content, converted from scope template version 4.",
   "field_groups": [
     {
@@ -403,7 +406,11 @@
         "website"
       ],
       "account_specific": false,
-      "notes": null
+      "notes": null,
+      "identifier_fields": [
+        "default_code",
+        "barcode"
+      ]
     },
     {
       "scope": "items",
