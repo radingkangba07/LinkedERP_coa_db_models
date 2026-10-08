@@ -33,6 +33,8 @@ All models and the `Base` declarative base are re-exported from the top-level pa
 | `jobs` | Job | jobs |
 | `mappings` | CoaMapping, CoaMappingSuggestion, CoaMappingHistory, AccountTypeMapping, CoaEmbeddingStore | coa_mappings, coa_mappings_suggestion, coa_mapping_history, account_type_mappings, coa_embedding_store |
 | `storage` | File | project_files |
+| `catalog` | CatalogErpConfig, CatalogFieldGroup, CatalogScopeRoute, CatalogSnapshot, SchemaModel, SchemaField, AccountDiscovery, CatalogScopeConfiguration, ConversionScopeModel, MigrationPlanBinding | catalog_erp_configs, catalog_field_groups, catalog_scope_routes, catalog_snapshots, schema_models, schema_fields, account_discoveries, catalog_scope_configurations, conversion_scope_models, migration_plan_bindings |
+| `outbox` | OutboxEvent (shared transactional outbox) | outbox_events |
 
 ## Migrations
 

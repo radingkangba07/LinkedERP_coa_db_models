@@ -139,3 +139,30 @@ def test_dab16_column_additions():
 
     file_cols = {c.name for c in File.__table__.columns}
     assert "workstream_id" in file_cols, "File missing column: workstream_id"
+
+
+def test_catalog_tables_registered_with_immutability_guards():
+    from coa_db_models import (
+        AccountDiscovery,
+        CatalogErpConfig,
+        CatalogFieldGroup,
+        CatalogScopeConfiguration,
+        CatalogScopeRoute,
+        CatalogSnapshot,
+        ConversionScopeModel,
+        MigrationPlanBinding,
+        OutboxEvent,
+        SchemaField,
+        SchemaModel,
+    )
+    from coa_db_models.catalog.models import TRIGGER_DDL
+
+    tables = {m.__tablename__ for m in (CatalogErpConfig, CatalogFieldGroup, CatalogScopeRoute,
+                                        CatalogSnapshot, SchemaModel, SchemaField, AccountDiscovery,
+                                        CatalogScopeConfiguration, ConversionScopeModel, MigrationPlanBinding,
+                                        OutboxEvent)}
+    assert tables <= set(Base.metadata.tables)
+    assert set(TRIGGER_DDL) == {"catalog_erp_configs", "catalog_field_groups", "catalog_scope_routes",
+                                "catalog_snapshots", "schema_models", "schema_fields", "account_discoveries",
+                                "catalog_scope_configurations", "conversion_scope_models",
+                                "migration_plan_bindings"}

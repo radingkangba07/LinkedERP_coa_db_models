@@ -22,6 +22,19 @@ from coa_db_models.projects.models import (
     OrgProjectWizardFields,
 )
 from coa_db_models.jobs.models import Job
+from coa_db_models.catalog.models import (
+    CatalogErpConfig,
+    CatalogFieldGroup,
+    CatalogScopeRoute,
+    CatalogSnapshot,
+    SchemaModel,
+    SchemaField,
+    AccountDiscovery,
+    CatalogScopeConfiguration,
+    ConversionScopeModel,
+    MigrationPlanBinding,
+)
+from coa_db_models.outbox.models import OutboxEvent
 from coa_db_models.mappings.models import CoaMapping, CoaMappingSuggestion, CoaMappingHistory, AccountTypeMapping, CoaEmbeddingStore
 from coa_db_models.storage.models import File
 from coa_db_models.workstreams.models import (
@@ -43,4 +56,8 @@ __all__ = [
     "PipelineRun", "FieldProfile",
     "TargetField", "ColumnMapping", "ColumnMappingHistory", "OrgMappingBookmark",
     "OrgERPConnection",
+    "CatalogErpConfig", "CatalogFieldGroup", "CatalogScopeRoute",
+    "CatalogSnapshot", "SchemaModel", "SchemaField", "AccountDiscovery",
+    "CatalogScopeConfiguration", "ConversionScopeModel", "MigrationPlanBinding",
+    "OutboxEvent",
 ]
