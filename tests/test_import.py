@@ -122,16 +122,16 @@ def test_value_mapping_tables_registered():
     id_col = ValueMapping.__table__.c.id
     assert id_col.server_default is not None, "ValueMapping.id must have a server_default"
 
-    vm_constraints = {c.name for c in ValueMapping.__table__.constraints}
-    assert "uix_value_mappings_run_field_value" in vm_constraints, \
-        "ValueMapping missing unique constraint uix_value_mappings_run_field_value"
+    vm_indexes = {i.name for i in ValueMapping.__table__.indexes}
+    assert "uix_value_mappings_run_field_value" in vm_indexes, \
+        "ValueMapping missing unique index uix_value_mappings_run_field_value"
 
     hist_cols = {c.name for c in ValueMappingHistory.__table__.columns}
     for col in (
-        "id", "mapping_id", "changed_by", "changed_at",
+        "id", "mapping_id", "run_id", "changed_by", "changed_at",
         "previous_status", "new_status",
         "previous_transformation_type", "new_transformation_type",
-        "previous_notes",
+        "previous_notes", "new_notes", "reason",
     ):
         assert col in hist_cols, f"ValueMappingHistory missing column: {col}"
 
