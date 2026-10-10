@@ -3,7 +3,7 @@
 PipelineTestRun has been merged into ImportRun — a single wizard step now
 covers both row validation and the simulated ERP connector pass.
 
-Revision ID: dab69
+Revision ID: dab70
 Revises: dab68
 """
 
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
-revision: str = "dab69"
-down_revision: Union[str, Sequence[str], None] = "dab68"
+revision: str = "dab70"
+down_revision: Union[str, Sequence[str], None] = "dab69"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

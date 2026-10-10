@@ -9,7 +9,7 @@ Adds four tables that power the controlled sandbox import UI:
 All four cascade-delete from import_runs; import_runs cascades from pipeline_runs,
 so deleting a pipeline run cleans up the full import history.
 
-Revision ID: dab68
+Revision ID: dab69
 Revises: dab67
 """
 
@@ -19,8 +19,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
-revision: str = "dab68"
-down_revision: Union[str, Sequence[str], None] = "dab67"
+revision: str = "dab69"
+down_revision: Union[str, Sequence[str], None] = "dab68"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -128,7 +128,10 @@ def upgrade() -> None:
         op.create_index("ix_connector_requests_batch_code", "connector_requests", ["import_run_id", "batch_code"])
     else:
         # Backfill: widen the operation CHECK constraint to include 'validate' on pre-existing tables.
-        op.drop_constraint("ck_connector_requests_operation", "connector_requests", type_="check")
+        # Guard the drop: the constraint may not exist if the table was created without it.
+        existing_ck_names = {c["name"] for c in inspector.get_check_constraints("connector_requests")}
+        if "ck_connector_requests_operation" in existing_ck_names:
+            op.drop_constraint("ck_connector_requests_operation", "connector_requests", type_="check")
         op.create_check_constraint(
             "ck_connector_requests_operation",
             "connector_requests",

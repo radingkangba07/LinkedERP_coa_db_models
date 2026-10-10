@@ -1,6 +1,6 @@
 """dab63: add pipeline_test_runs table (wizard step 7)
 
-Revision ID: dab67
+Revision ID: dab68
 Revises: dab66
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
-revision: str = "dab67"
+revision: str = "dab68"
 down_revision: Union[str, Sequence[str], None] = "dab66"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
